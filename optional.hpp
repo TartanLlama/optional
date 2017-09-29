@@ -242,8 +242,21 @@ class optional : private detail::optional_base<T> {
     template <class U = T> optional& operator=(U&&);
     template <class U> optional& operator=(const optional<U>&);
     template <class U> optional& operator=(optional<U>&&);
-    template <class... Args> T& emplace(Args&&...);
-    template <class U, class... Args> T& emplace(initializer_list<U>, Args&&...);
+
+    template <class... Args> T& emplace(Args&&...) {
+        static_assert(std::is_constructible<T, Args&&...>::value,
+                      "T must be constructible with Args");
+
+        *this = nullopt;
+        new (std::addressof(m_storage.t)) T(std​::​forward<Args>(args)...);
+    }
+
+    template <class U, class... Args>
+    tl::enable_if_t<std::is_constructible<T, std::initializer_list<U>&, Args&&...>::value, T&>
+    T& emplace(initializer_list<U>, Args&&...) {
+        *this = nullopt;
+        new (std::addressof(m_storage.t)) T(il, std​::​forward<Args>(args)...);
+    }
 
     // [optional.swap], swap
     void swap(optional& rhs)
@@ -260,7 +273,7 @@ class optional : private detail::optional_base<T> {
             }
         }
         else if (rhs.has_value()) {
-            new (&m_storage.t) T (std::move(rhs.m_storage.t));
+            new (std::addressof(m_storage.t)) T (std::move(rhs.m_storage.t));
             rhs.m_storage.t.T::~T();
         }
     }
