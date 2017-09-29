@@ -19,8 +19,11 @@ namespace tl {
   class optional;
 
   // [optional.nullopt], no-value state indicator
-  struct nullopt_t{};
-  inline constexpr nullopt_t nullopt;
+  struct nullopt_t{
+      struct do_not_use{};
+      constexpr explicit nullopt(do_not_use, do_not_use) noexcept{}
+  };
+    inline constexpr nullopt_t nullopt{nullopt_t::do_not_use{}, nullopt_t::do_not_use{}};
 
   // [optional.bad.access], class bad_­optional_­access
     class bad_optional_access : public std::exception {
