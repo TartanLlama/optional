@@ -204,19 +204,23 @@ namespace std {
 
 namespace tl {
 
+    namespace detail {
+        template <class T>
+        struct optional_base : <T> {
+
+        };
+    }
+
 template <class T>
-  class optional {
+class optional : private detail::optional_base<T> {
   public:
     using value_type = T;
 
     // [optional.ctor], constructors
-    constexpr optional() noexcept : m_has_value(false) {
-        new (&m_storage.d) dummy;
-    }
-    constexpr optional(nullopt_t) noexcept : optional() {}
-
-    constexpr optional(const optional& rhs);
-    constexpr optional(optional&&) noexcept(see below);
+    constexpr optional() noexcept = default;
+    constexpr optional(nullopt_t) noexcept = default;
+    constexpr optional(const optional& rhs) = default;
+    constexpr optional(optional&&);
     template <class... Args>
       constexpr explicit optional(in_place_t, Args&&...);
     template <class U, class... Args>
@@ -242,7 +246,24 @@ template <class T>
     template <class U, class... Args> T& emplace(initializer_list<U>, Args&&...);
 
     // [optional.swap], swap
-    void swap(optional&) noexcept(see below);
+    void swap(optional& rhs)
+        noexcept(std::is_nothrow_move_constructible_v<T>::value && std::is_nothrow_swappable<T>::value)
+    {
+        if (lhs.has_value()) {
+            if (rhs.has_value()) {
+                using std::swap;
+                swap(value(), rhs.value());
+            }
+            else {
+                new (&rhs.m_storage.t) T (std::move(m_storage.t));
+                m_storage.t.T::~T();
+            }
+        }
+        else if (rhs.has_value()) {
+            new (&m_storage.t) T (std::move(rhs.m_storage.t));
+            rhs.m_storage.t.T::~T();
+        }
+    }
 
     // [optional.observe], observers
     constexpr const T* operator->() const {
