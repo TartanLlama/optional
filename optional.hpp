@@ -610,7 +610,12 @@ namespace tl {
         }
 
         // [optional.mod], modifiers
-        void reset() noexcept;
+        void reset() noexcept {
+            if (has_value()) {
+                this->m_value.~T();
+                this->m_has_value = false;
+            }
+        }
 
     private:
 
