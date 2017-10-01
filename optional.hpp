@@ -284,9 +284,9 @@ namespace tl {
             constexpr optional_storage_base() noexcept
                 : m_dummy(), m_has_value(false) {}
 
-            template <class U>
-            constexpr optional_storage_base(in_place_t, U&& u) noexcept
-                : m_value(std::forward<U>(u)), m_has_value(true) {}
+            template <class... U>
+            constexpr optional_storage_base(in_place_t, U&&... u) noexcept
+                : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
             ~optional_storage_base() {
                 if (m_has_value) {
@@ -310,9 +310,9 @@ namespace tl {
                 : m_dummy(), m_has_value(false) {}
 
 
-            template <class U>
-            constexpr optional_storage_base(in_place_t, U&& u) noexcept
-                : m_value(std::forward<U>(u)), m_has_value(true) {}
+            template <class... U>
+            constexpr optional_storage_base(in_place_t, U&&... u) noexcept
+                : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
             ~optional_storage_base() = default;
 
@@ -351,10 +351,8 @@ namespace tl {
         }
         template <class... Args>
         constexpr explicit optional(enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
-                                    Args&&... args) {
-            this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (std::forward<Args>(args)...);
-        }
+                                    Args&&... args)
+            : base(in_place, std::forward<Args>(args)...) {}
         template <class U, class... Args>
         constexpr explicit optional(
             enable_if_t<std::is_constructible<T, std::initializer_list<U>&, Args&&...>::value, in_place_t>,
