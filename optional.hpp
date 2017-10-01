@@ -147,7 +147,7 @@ namespace tl {
         if (lhs.has_value())
             return true;
 
-        return lhs.value() == rhs.value();
+        return *lhs == *rhs;
     }
     template <class T, class U>
     inline constexpr bool operator!=(const optional<T>& lhs, const optional<U>& rhs) {
@@ -156,7 +156,7 @@ namespace tl {
         if (lhs.has_value())
             return false;
 
-        return lhs.value() != rhs.value();
+        return *lhs != *rhs;
     }
     template <class T, class U>
     inline constexpr bool operator<(const optional<T>& lhs, const optional<U>& rhs) {
@@ -165,7 +165,7 @@ namespace tl {
         if (!lhs.has_value())
             return true;
 
-        return lhs.value() < rhs.value();
+        return *lhs < *rhs;
     }
     template <class T, class U>
     inline constexpr bool operator>(const optional<T>& lhs, const optional<U>& rhs) {
@@ -174,7 +174,7 @@ namespace tl {
         if (!rhs.has_value())
             return true;
 
-        return lhs.value() > rhs.value();
+        return *lhs > *rhs;
     }
     template <class T, class U>
     inline constexpr bool operator<=(const optional<T>& lhs, const optional<U>& rhs) {
@@ -183,7 +183,7 @@ namespace tl {
         if (!rhs.has_value())
             return false;
 
-        return lhs.value() <= rhs.value();
+        return *lhs <= *rhs;
     }
     template <class T, class U>
     inline constexpr bool operator>=(const optional<T>& lhs, const optional<U>& rhs) {
@@ -192,7 +192,7 @@ namespace tl {
         if (!lhs.has_value())
             return false;
 
-        return lhs.value() >= rhs.value();
+        return *lhs >= *rhs;
     }
 
     // [optional.nullops], comparison with nullopt
@@ -238,37 +238,37 @@ namespace tl {
         return lhs.has_value() ? *lhs == rhs : false;
     }
     template <class T, class U> inline constexpr bool operator==(const U& lhs, const optional<T>& rhs) {
-        return rhs.has_value() ? lhs == rhs.value() : false;
+        return rhs.has_value() ? lhs == *rhs : false;
     }
     template <class T, class U> inline constexpr bool operator!=(const optional<T>& lhs, const U& rhs) {
-        return lhs.has_value() ? lhs.value() != lhs : true;
+        return lhs.has_value() ? *lhs != lhs : true;
     }
     template <class T, class U> inline constexpr bool operator!=(const U& lhs, const optional<T>& rhs) {
-        return rhs.has_value() ? lhs != rhs.value() : true;
+        return rhs.has_value() ? lhs != *rhs : true;
     }
     template <class T, class U> inline constexpr bool operator<(const optional<T>& lhs, const U& rhs) {
-        return lhs.has_value() ? lhs.value() < lhs : true;
+        return lhs.has_value() ? *lhs < lhs : true;
     }
     template <class T, class U> inline constexpr bool operator<(const U& lhs, const optional<T>& rhs) {
-        return rhs.has_value() ? lhs < rhs.value() : false;
+        return rhs.has_value() ? lhs < *rhs : false;
     }
     template <class T, class U> inline constexpr bool operator<=(const optional<T>& lhs, const U& rhs) {
-        return lhs.has_value() ? lhs.value() <= lhs : true;
+        return lhs.has_value() ? *lhs <= lhs : true;
     }
     template <class T, class U> inline constexpr bool operator<=(const U& lhs, const optional<T>& rhs) {
-        return rhs.has_value() ? lhs <= rhs.value() : false;
+        return rhs.has_value() ? lhs <= *rhs : false;
     }
     template <class T, class U> inline constexpr bool operator>(const optional<T>& lhs, const U& rhs) {
-        return lhs.has_value() ? lhs.value() > lhs : false;
+        return lhs.has_value() ? *lhs > lhs : false;
     }
     template <class T, class U> inline constexpr bool operator>(const U& lhs, const optional<T>& rhs) {
-        return rhs.has_value() ? lhs > rhs.value() : true;
+        return rhs.has_value() ? lhs > *rhs : true;
     }
     template <class T, class U> inline constexpr bool operator>=(const optional<T>& lhs, const U& rhs) {
-        return lhs.has_value() ? lhs.value() >= lhs : false;
+        return lhs.has_value() ? *lhs >= lhs : false;
     }
     template <class T, class U> inline constexpr bool operator>=(const U& lhs, const optional<T>& rhs) {
-        return rhs.has_value() ? lhs >= rhs.value() : true;
+        return rhs.has_value() ? lhs >= *rhs : true;
     }
 
 
@@ -302,7 +302,7 @@ namespace std {
             if (!o.has_value())
                 return 0;
 
-            return hash<tl::remove_const_t<T>>()(o.value());
+            return hash<tl::remove_const_t<T>>()(*o);
         }
     };
 }
@@ -356,14 +356,15 @@ namespace tl {
         constexpr optional(const optional& rhs) {
             if (rhs.has_value()) {
                 this->m_has_value = true;
-                new (std::addressof(this->m_value)) T (rhs.value());
+                new (std::addressof(this->m_value)) T (*rhs);
             }
         }
-        template <class U = T, enable_if_t<std::is_move_constructible<T>::value>* = nullptr>
+
+        // TODO conditionally disable
         constexpr optional(optional&& rhs) {
             if (rhs.has_value()) {
                 this->m_has_value = true;
-                new (std::addressof(this->m_value)) T (std::move(rhs.value()));
+                new (std::addressof(this->m_value)) T (std::move(*rhs));
             }
         }
         template <class... Args>
@@ -398,21 +399,21 @@ namespace tl {
                   enable_if_t<std::is_convertible<const U&, T>::value>* = nullptr>
         optional(const optional<U>& rhs) {
             this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (rhs.value());
+            new (std::addressof(this->m_value)) T (*rhs);
         }
 
         template <class U, detail::enable_from_other<T,U,const U&>* = nullptr,
                   enable_if_t<!std::is_convertible<const U&, T>::value>* = nullptr>
         optional(const optional<U>& rhs) {
             this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (rhs.value());
+            new (std::addressof(this->m_value)) T (*rhs);
         }
 
         template <class U, detail::enable_from_other<T,U,U&&>* = nullptr,
                   enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr>
             optional(optional<U>&& rhs) {
             this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (std::move(rhs.value()));
+            new (std::addressof(this->m_value)) T (std::move(*rhs));
         }
 
 
@@ -420,7 +421,7 @@ namespace tl {
                   enable_if_t<!std::is_convertible<U&&, T>::value>* = nullptr>
             explicit optional(optional<U>&& rhs) {
             this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (std::move(rhs.value()));
+            new (std::addressof(this->m_value)) T (std::move(*rhs));
         }
 
         // [optional.dtor], destructor
@@ -543,7 +544,7 @@ namespace tl {
             if (has_value()) {
                 if (rhs.has_value()) {
                     using std::swap;
-                    swap(value(), rhs.value());
+                    swap(**this, *rhs);
                 }
                 else {
                     new (&rhs.m_value) T (std::move(this->m_value));
@@ -600,12 +601,12 @@ namespace tl {
         template <class U> constexpr T value_or(U&& u) const& {
             static_assert(std::is_copy_constructible<T>::value && std::is_convertible<U&&, T>::value,
                           "T must be copy constructible and convertible from U");
-            return has_value() ? value() : static_cast<T>(std::forward<U>(u));
+            return has_value() ? **this : static_cast<T>(std::forward<U>(u));
         }
         template <class U> constexpr T value_or(U&& u) && {
             static_assert(std::is_move_constructible<T>::value && std::is_convertible<U&&, T>::value,
                           "T must be move constructible and convertible from U");
-            return has_value() ? value() : static_cast<T>(std::forward<U>(u));
+            return has_value() ? **this : static_cast<T>(std::forward<U>(u));
         }
 
         // [optional.mod], modifiers
