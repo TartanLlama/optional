@@ -142,57 +142,27 @@ namespace tl {
     // [optional.relops], relational operators
     template <class T, class U>
     inline constexpr bool operator==(const optional<T>& lhs, const optional<U>& rhs) {
-        if (lhs.has_value() != rhs.has_value())
-            return false;
-        if (lhs.has_value())
-            return true;
-
-        return *lhs == *rhs;
+        return lhs.has_value() == rhs.has_value() && (!lhs.has_value() || *lhs == *rhs);
     }
     template <class T, class U>
     inline constexpr bool operator!=(const optional<T>& lhs, const optional<U>& rhs) {
-        if (lhs.has_value() != rhs.has_value())
-            return true;
-        if (lhs.has_value())
-            return false;
-
-        return *lhs != *rhs;
+        return lhs.has_value() != rhs.has_value() || (lhs.has_value() && *lhs != *rhs);
     }
     template <class T, class U>
     inline constexpr bool operator<(const optional<T>& lhs, const optional<U>& rhs) {
-        if (!rhs.has_value())
-            return false;
-        if (!lhs.has_value())
-            return true;
-
-        return *lhs < *rhs;
+        return rhs.has_value() && (!lhs.has_value() || *lhs < *rhs);
     }
     template <class T, class U>
     inline constexpr bool operator>(const optional<T>& lhs, const optional<U>& rhs) {
-        if (!lhs.has_value())
-            return false;
-        if (!rhs.has_value())
-            return true;
-
-        return *lhs > *rhs;
+        return lhs.has_value() && (!rhs.has_value() || *lhs > *rhs);
     }
     template <class T, class U>
     inline constexpr bool operator<=(const optional<T>& lhs, const optional<U>& rhs) {
-        if (!lhs.has_value())
-            return true;
-        if (!rhs.has_value())
-            return false;
-
-        return *lhs <= *rhs;
+        return !lhs.has_value() || (rhs.has_value() && *lhs <= *rhs);
     }
     template <class T, class U>
     inline constexpr bool operator>=(const optional<T>& lhs, const optional<U>& rhs) {
-        if (!rhs.has_value())
-            return true;
-        if (!lhs.has_value())
-            return false;
-
-        return *lhs >= *rhs;
+        return !rhs.has_value() || (lhs.has_value() && *lhs >= *rhs);
     }
 
     // [optional.nullops], comparison with nullopt
@@ -313,6 +283,11 @@ namespace tl {
         struct optional_storage_base {
             constexpr optional_storage_base() noexcept
                 : m_dummy(), m_has_value(false) {}
+
+            template <class U>
+            constexpr optional_storage_base(in_place_t, U&& u) noexcept
+                : m_value(std::forward<U>(u)), m_has_value(true) {}
+
             ~optional_storage_base() {
                 if (m_has_value) {
                     m_value.~T();
@@ -333,6 +308,12 @@ namespace tl {
         struct optional_storage_base<T, true> {
             constexpr optional_storage_base() noexcept
                 : m_dummy(), m_has_value(false) {}
+
+
+            template <class U>
+            constexpr optional_storage_base(in_place_t, U&& u) noexcept
+                : m_value(std::forward<U>(u)), m_has_value(true) {}
+
             ~optional_storage_base() = default;
 
             struct dummy{};
@@ -347,6 +328,7 @@ namespace tl {
 
     template <class T>
     class optional : private detail::optional_storage_base<T> {
+        using base = detail::optional_storage_base<T>;
     public:
         using value_type = T;
 
@@ -383,17 +365,11 @@ namespace tl {
 
         template <class U = T, enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr,
                   detail::enable_forward_value<T,U>* = nullptr>
-            constexpr optional(U&& u) {
-            this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (std::forward<U>(u));
-        }
+            constexpr optional(U&& u) : base(in_place, std::forward<U>(u)) {}
 
         template <class U = T, enable_if_t<!std::is_convertible<U&&, T>::value>* = nullptr,
                   detail::enable_forward_value<T,U>* = nullptr>
-            constexpr explicit optional(U&& u) {
-            this->m_has_value = true;
-            new (std::addressof(this->m_value)) T (std::forward<U>(u));
-        }
+            constexpr explicit optional(U&& u)  : base(in_place, std::forward<U>(u)) {}
 
         template <class U, detail::enable_from_other<T,U,const U&>* = nullptr,
                   enable_if_t<std::is_convertible<const U&, T>::value>* = nullptr>
