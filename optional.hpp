@@ -41,6 +41,12 @@ namespace tl {
     template <class T> using underlying_type_t = typename std::underlying_type<T>::type;
     template <class T> using result_of_t = typename std::result_of<T>::type;
 
+    template <class...> struct conjunction : std::true_type { };
+    template <class B> struct conjunction<B> : B { };
+    template <class B, class... Bs>
+    struct conjunction<B, Bs...>
+        : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
+
     template<class...> struct voider { using type = void; };
     template<class...Ts> using void_t = typename voider<Ts...>::type;
 
@@ -73,7 +79,32 @@ namespace tl {
             !std::is_convertible<const optional<U>&, T>::value &&
             !std::is_convertible<const optional<U>&&, T>::value
         >;
-    }
+
+        template <class T, class U>
+        using enable_assign_forward = tl::enable_if_t<
+            !is_same_v<optional<T>, tl::decay_t<U>>::value &&
+            !tl::conjunction<std::is_scalar<T>, std::is_same<T, tl::decay_t<U>>>::value &&
+            std::is_constructible<T, U>::value &&
+            is_assignable<T&, U>::value
+        >;
+
+        template <class T, class U, class Other>
+        using enable_assign_from_other = tl::enable_if_t<
+            std::is_constructible<T, Other> &&
+            std::is_assignablev<T&, Other> &&
+            !std::is_constructiblev<T, optional<U>&> &&
+            !std::is_constructiblev<T, optional<U>&&> &&
+            !std::is_constructiblev<T, const optional<U>&> &&
+            !std::is_constructiblev<T, const optional<U>&&> &&
+            !std::is_convertiblev<optional<U>&, T> &&
+            !std::is_convertiblev<optional<U>&&, T> &&
+            !std::is_convertiblev<const optional<U>&, T> &&
+            !std::is_convertiblev<const optional<U>&&, T> &&
+            !std::is_assignablev<T&, optional<U>&> &&
+            !std::is_assignablev<T&, optional<U>&&> &&
+            !std::is_assignablev<T&, const optional<U>&> &&
+            !std::is_assignablev<T&, const optional<U>&&>
+            >
 
     //TODO improve
     template <class T, class=void>
@@ -356,7 +387,7 @@ class optional : private detail::optional_storage_base<T> {
 
             template <class U = T, tl::enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr,
                       detail::enable_forward_value<T,U>* = nullptr>
-                constexpr optional(U&& u) {
+            constexpr optional(U&& u) {
                 this->m_has_value = true;
                 new (std::addressof(this->m_value)) T (std::forward<U>(u));
             }
@@ -445,7 +476,9 @@ class optional : private detail::optional_storage_base<T> {
     }
 
     // TODO conditionally delete, check exception guarantee
-    template <class U = T> optional& operator=(U&& u) {
+    template <class U = T,
+              detail::enable_assign_forward<T,U>* = nullptr>
+        optional& operator=(U&& u) {
         if (has_value()) {
             this->m_value = std::forward<U>(u);
         }
@@ -456,7 +489,8 @@ class optional : private detail::optional_storage_base<T> {
     }
 
     // TODO SFINAE, check exception guarantee
-    template <class U> optional& operator=(const optional<U>& rhs) {
+    template <class U, detail::enable_assign_from_other<T,U,const U&>* = nullptr>
+        optional& operator=(const optional<U>& rhs) {
         if (has_value()) {
             if (rhs.has_value()) {
                 this->m_value = rhs.m_value;
@@ -474,7 +508,8 @@ class optional : private detail::optional_storage_base<T> {
     }
 
     // TODO SFINAE, check exception guarantee
-    template <class U> optional& operator=(optional<U>&& rhs) {
+    template <class U, detail::enable_assign_from_other<T,U,U>* = nullptr>
+    optional& operator=(optional<U>&& rhs) {
         if (has_value()) {
             if (rhs.has_value()) {
                 this->m_value = std::move(rhs.m_value);
