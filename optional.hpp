@@ -343,7 +343,7 @@ namespace tl {
         }
 
         // TODO conditionally disable
-        constexpr optional(optional&& rhs) {
+        constexpr optional(optional&& rhs) noexcept(std::is_nothrow_move_constructible<T>::value) {
             if (rhs.has_value()) {
                 this->m_has_value = true;
                 new (std::addressof(this->m_value)) T (std::move(*rhs));
@@ -428,7 +428,8 @@ namespace tl {
         }
 
         // TODO conditionally delete, check exception guarantee
-        optional& operator=(optional&& rhs) noexcept {
+        optional& operator=(optional&& rhs)
+            noexcept(std::is_nothrow_move_assignable<T>::value && std::is_nothrow_move_constructible<T>::value) {
             if (has_value()) {
                 if (rhs.has_value()) {
                     this->m_value = std::move(rhs.m_value);
