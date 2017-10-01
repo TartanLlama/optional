@@ -14,6 +14,7 @@
 #include <utility>
 #include <exception>
 #include <new>
+#include <functional>
 
 namespace tl {
     template <class T> using remove_cv_t = typename std::remove_cv<T>::type;
@@ -260,13 +261,12 @@ void swap(optional<T>& lhs, optional<T>& rhs) noexcept(noexcept(lhs.swap(rhs))) 
   }
 }
 
-  // [optional.hash], hash support
+// [optional.hash], hash support
 namespace std {
-    template <class T> struct hash;
     //TODO SFINAE
     template <class T>
     struct hash<tl::optional<T>> {
-        std::size_t operator() (const tl::optional<T>& o) {
+        std::size_t operator() (const tl::optional<T>& o) const {
             if (!o.has_value())
                 return 0;
 
@@ -280,6 +280,8 @@ namespace tl {
     namespace detail {
         template <class T, bool = std::is_trivially_destructible<T>::value>
         struct optional_storage_base {
+            constexpr optional_storage_base() noexcept
+                : m_dummy(), m_has_value(false) {}
             ~optional_storage_base() {
                 if (m_has_value) {
                     m_value.~T();
@@ -293,11 +295,13 @@ namespace tl {
                 T m_value;
             };
 
-            bool m_has_value = false;
+            bool m_has_value;
         };
 
         template <class T>
         struct optional_storage_base<T, true> {
+            constexpr optional_storage_base() noexcept
+                : m_dummy(), m_has_value(false) {}
             ~optional_storage_base() {
                 if (m_has_value) {
                     //don't destruct value
@@ -548,16 +552,20 @@ class optional : private detail::optional_storage_base<T> {
         return this->m_has_value;
     }
     constexpr const T& value() const& {
-        return has_value() ? this->m_value : throw bad_optional_access();
+        if (has_value()) return this->m_value;
+        throw bad_optional_access();
     }
     constexpr T& value() & {
-        return has_value() ? this->m_value : throw bad_optional_access();
+        if (has_value()) return this->m_value;
+        throw bad_optional_access();
     }
     constexpr T&& value() && {
-        return has_value() ? std::move(this->m_value) : throw bad_optional_access();
+        if (has_value()) return std::move(this->m_value);
+        throw bad_optional_access();
     }
     constexpr const T&& value() const&& {
-        return has_value() ? std::move(this->m_value) : throw bad_optional_access();
+        if (has_value()) return std::move(this->m_value);
+        throw bad_optional_access();
     }
     template <class U> constexpr T value_or(U&& u) const& {
         static_assert(std::is_copy_constructible<T>::value && std::is_convertible<U&&, T>::value,
