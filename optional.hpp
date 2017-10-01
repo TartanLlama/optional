@@ -591,8 +591,5 @@ namespace tl {
                 this->m_has_value = false;
             }
         }
-
-    private:
-
     };
 }
