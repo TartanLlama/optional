@@ -17,38 +17,40 @@
 #include <functional>
 
 namespace tl {
-    template <class T> using remove_cv_t = typename std::remove_cv<T>::type;
-    template <class T> using remove_const_t = typename std::remove_const<T>::type;
-    template <class T> using remove_volatile_t = typename std::remove_volatile<T>::type;
-    template <class T> using add_cv_t = typename std::add_cv<T>::type;
-    template <class T> using add_const_t = typename std::add_const<T>::type;
-    template <class T> using add_volatile_t = typename std::add_volatile<T>::type;
-    template <class T> using remove_reference_t = typename std::remove_reference<T>::type;
-    template <class T> using add_lvalue_reference_t = typename std::add_lvalue_reference<T>::type;
-    template <class T> using add_rvalue_reference_t = typename std::add_rvalue_reference<T>::type;
-    template <class T> using remove_pointer_t = typename std::remove_pointer<T>::type;
-    template <class T> using add_pointer_t = typename std::add_pointer<T>::type;
-    template <class T> using make_signed_t = typename std::make_signed<T>::type;
-    template <class T> using make_unsigned_t = typename std::make_unsigned<T>::type;
-    template <class T> using remove_extent_t = typename std::remove_extent<T>::type;
-    template <class T> using remove_all_extents_t = typename std::remove_all_extents<T>::type;
-    template <std::size_t N, std::size_t A=N> using aligned_storage_t = typename std::aligned_storage<N,A>::type;
-    template <std::size_t N, class... Ts> using aligned_union_t = typename std::aligned_union<N,Ts...>::type;
-    template <class T> using decay_t = typename std::decay<T>::type;
-    template <bool E, class T=void> using enable_if_t = typename std::enable_if<E,T>::type;
-    template <bool B, class T, class F> using conditional_t = typename std::conditional<B,T,F>::type;
-    template <class... Ts> using common_type_t = typename std::common_type<Ts...>::type;
-    template <class T> using underlying_type_t = typename std::underlying_type<T>::type;
-    template <class T> using result_of_t = typename std::result_of<T>::type;
+    namespace detail {
+        template <class T> using remove_cv_t = typename std::remove_cv<T>::type;
+        template <class T> using remove_const_t = typename std::remove_const<T>::type;
+        template <class T> using remove_volatile_t = typename std::remove_volatile<T>::type;
+        template <class T> using add_cv_t = typename std::add_cv<T>::type;
+        template <class T> using add_const_t = typename std::add_const<T>::type;
+        template <class T> using add_volatile_t = typename std::add_volatile<T>::type;
+        template <class T> using remove_reference_t = typename std::remove_reference<T>::type;
+        template <class T> using add_lvalue_reference_t = typename std::add_lvalue_reference<T>::type;
+        template <class T> using add_rvalue_reference_t = typename std::add_rvalue_reference<T>::type;
+        template <class T> using remove_pointer_t = typename std::remove_pointer<T>::type;
+        template <class T> using add_pointer_t = typename std::add_pointer<T>::type;
+        template <class T> using make_signed_t = typename std::make_signed<T>::type;
+        template <class T> using make_unsigned_t = typename std::make_unsigned<T>::type;
+        template <class T> using remove_extent_t = typename std::remove_extent<T>::type;
+        template <class T> using remove_all_extents_t = typename std::remove_all_extents<T>::type;
+        template <std::size_t N, std::size_t A=N> using aligned_storage_t = typename std::aligned_storage<N,A>::type;
+        template <std::size_t N, class... Ts> using aligned_union_t = typename std::aligned_union<N,Ts...>::type;
+        template <class T> using decay_t = typename std::decay<T>::type;
+        template <bool E, class T=void> using enable_if_t = typename std::enable_if<E,T>::type;
+        template <bool B, class T, class F> using conditional_t = typename std::conditional<B,T,F>::type;
+        template <class... Ts> using common_type_t = typename std::common_type<Ts...>::type;
+        template <class T> using underlying_type_t = typename std::underlying_type<T>::type;
+        template <class T> using result_of_t = typename std::result_of<T>::type;
 
-    template <class...> struct conjunction : std::true_type { };
-    template <class B> struct conjunction<B> : B { };
-    template <class B, class... Bs>
-    struct conjunction<B, Bs...>
-        : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
+        template <class...> struct conjunction : std::true_type { };
+        template <class B> struct conjunction<B> : B { };
+        template <class B, class... Bs>
+        struct conjunction<B, Bs...>
+            : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
 
-    template<class...> struct voider { using type = void; };
-    template<class...Ts> using void_t = typename voider<Ts...>::type;
+        template<class...> struct voider { using type = void; };
+        template<class...Ts> using void_t = typename voider<Ts...>::type;
+    }
 
     struct in_place_t {
         explicit in_place_t() = default;
@@ -61,14 +63,14 @@ namespace tl {
 
     namespace detail {
         template <class T, class U>
-        using enable_forward_value = enable_if_t<
+        using enable_forward_value = detail::enable_if_t<
             std::is_constructible<T, U&&>::value &&
-            !std::is_same<tl::decay_t<U>, in_place_t>::value &&
-            !std::is_same<optional<T>, tl::decay_t<U>>::value
+            !std::is_same<detail::decay_t<U>, in_place_t>::value &&
+            !std::is_same<optional<T>, detail::decay_t<U>>::value
             >;
 
         template <class T, class U, class Other>
-        using enable_from_other = enable_if_t<
+        using enable_from_other = detail::enable_if_t<
             std::is_constructible<T, Other>::value &&
             !std::is_constructible<T, optional<U>&>::value &&
             !std::is_constructible<T, optional<U>&&>::value &&
@@ -81,15 +83,15 @@ namespace tl {
             >;
 
         template <class T, class U>
-        using enable_assign_forward = enable_if_t<
-            !std::is_same<optional<T>, tl::decay_t<U>>::value &&
-            !tl::conjunction<std::is_scalar<T>, std::is_same<T, tl::decay_t<U>>>::value &&
+        using enable_assign_forward = detail::enable_if_t<
+            !std::is_same<optional<T>, detail::decay_t<U>>::value &&
+            !detail::conjunction<std::is_scalar<T>, std::is_same<T, detail::decay_t<U>>>::value &&
             std::is_constructible<T, U>::value &&
             std::is_assignable<T&, U>::value
             >;
 
         template <class T, class U, class Other>
-        using enable_assign_from_other = enable_if_t<
+        using enable_assign_from_other = detail::enable_if_t<
             std::is_constructible<T, Other>::value &&
             std::is_assignable<T&, Other>::value &&
             !std::is_constructible<T, optional<U>&>::value &&
@@ -243,15 +245,15 @@ namespace tl {
 
 
     // [optional.specalg], specialized algorithms
-    template <class T, enable_if_t<std::is_move_constructible<T>::value>* = nullptr,
-              enable_if_t<detail::is_swappable<T>::value>* = nullptr>
+    template <class T, detail::enable_if_t<std::is_move_constructible<T>::value>* = nullptr,
+              detail::enable_if_t<detail::is_swappable<T>::value>* = nullptr>
     void swap(optional<T>& lhs, optional<T>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
         return lhs.swap(rhs);
     }
 
     template <class T>
-    inline constexpr optional<tl::decay_t<T>> make_optional(T&& v) {
-        return optional<decay_t<T>>(std::forward<T>(v));
+    inline constexpr optional<detail::decay_t<T>> make_optional(T&& v) {
+        return optional<detail::decay_t<T>>(std::forward<T>(v));
     }
     template <class T, class... Args>
     inline constexpr optional<T> make_optional(Args&&... args) {
@@ -272,7 +274,7 @@ namespace std {
             if (!o.has_value())
                 return 0;
 
-            return hash<tl::remove_const_t<T>>()(*o);
+            return hash<tl::detail::remove_const_t<T>>()(*o);
         }
     };
 }
@@ -350,41 +352,41 @@ namespace tl {
             }
         }
         template <class... Args>
-        constexpr explicit optional(enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
+        constexpr explicit optional(detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
                                     Args&&... args)
             : base(in_place, std::forward<Args>(args)...) {}
         template <class U, class... Args>
         constexpr explicit optional(
-            enable_if_t<std::is_constructible<T, std::initializer_list<U>&, Args&&...>::value, in_place_t>,
+            detail::enable_if_t<std::is_constructible<T, std::initializer_list<U>&, Args&&...>::value, in_place_t>,
             std::initializer_list<U> il, Args&&... args) {
             this->m_has_value = true;
             new (std::addressof(this->m_value)) T (il, std::forward<Args>(args)...);
         }
 
-        template <class U = T, enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr,
+        template <class U = T, detail::enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr,
                   detail::enable_forward_value<T,U>* = nullptr>
             constexpr optional(U&& u) : base(in_place, std::forward<U>(u)) {}
 
-        template <class U = T, enable_if_t<!std::is_convertible<U&&, T>::value>* = nullptr,
+        template <class U = T, detail::enable_if_t<!std::is_convertible<U&&, T>::value>* = nullptr,
                   detail::enable_forward_value<T,U>* = nullptr>
             constexpr explicit optional(U&& u)  : base(in_place, std::forward<U>(u)) {}
 
         template <class U, detail::enable_from_other<T,U,const U&>* = nullptr,
-                  enable_if_t<std::is_convertible<const U&, T>::value>* = nullptr>
+                  detail::enable_if_t<std::is_convertible<const U&, T>::value>* = nullptr>
         optional(const optional<U>& rhs) {
             this->m_has_value = true;
             new (std::addressof(this->m_value)) T (*rhs);
         }
 
         template <class U, detail::enable_from_other<T,U,const U&>* = nullptr,
-                  enable_if_t<!std::is_convertible<const U&, T>::value>* = nullptr>
+                  detail::enable_if_t<!std::is_convertible<const U&, T>::value>* = nullptr>
         optional(const optional<U>& rhs) {
             this->m_has_value = true;
             new (std::addressof(this->m_value)) T (*rhs);
         }
 
         template <class U, detail::enable_from_other<T,U,U&&>* = nullptr,
-                  enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr>
+                  detail::enable_if_t<std::is_convertible<U&&, T>::value>* = nullptr>
             optional(optional<U>&& rhs) {
             this->m_has_value = true;
             new (std::addressof(this->m_value)) T (std::move(*rhs));
@@ -392,7 +394,7 @@ namespace tl {
 
 
         template <class U, detail::enable_from_other<T,U,U&&>* = nullptr,
-                  enable_if_t<!std::is_convertible<U&&, T>::value>* = nullptr>
+                  detail::enable_if_t<!std::is_convertible<U&&, T>::value>* = nullptr>
             explicit optional(optional<U>&& rhs) {
             this->m_has_value = true;
             new (std::addressof(this->m_value)) T (std::move(*rhs));
@@ -506,7 +508,7 @@ namespace tl {
         }
 
         template <class U, class... Args>
-        enable_if_t<std::is_constructible<T, std::initializer_list<U>&, Args&&...>::value, T&>
+        detail::enable_if_t<std::is_constructible<T, std::initializer_list<U>&, Args&&...>::value, T&>
             emplace(std::initializer_list<U> il, Args&&... args) {
             *this = nullopt;
             new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
