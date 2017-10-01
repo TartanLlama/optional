@@ -397,12 +397,95 @@ class optional : private detail::optional_storage_base<T> {
     ~optional() = default;
 
     // [optional.assign], assignment
-    optional& operator=(nullopt_t) noexcept;
-    optional& operator=(const optional&);
-    optional& operator=(optional&&) noexcept;
-    template <class U = T> optional& operator=(U&&);
-    template <class U> optional& operator=(const optional<U>&);
-    template <class U> optional& operator=(optional<U>&&);
+    optional& operator=(nullopt_t) noexcept {
+        if (has_value()) {
+            this->m_value.~T();
+            this->m_has_value = false;
+        }
+    }
+
+    // TODO conditionally delete, check exception guarantee
+    optional& operator=(const optional& rhs) {
+        if (has_value()) {
+            if (rhs.has_value()) {
+                this->m_value = rhs.m_value;
+            }
+            else {
+                this->m_value.~T();
+                this->m_has_value = false;
+            }
+        }
+
+        if (rhs.has_value()) {
+            new (std::addressof(this->m_value)) T (rhs.m_value);
+            this->m_has_value = true;
+        }
+    }
+
+    // TODO conditionally delete, check exception guarantee
+    optional& operator=(optional&& rhs) noexcept {
+        if (has_value()) {
+            if (rhs.has_value()) {
+                this->m_value = std::move(rhs.m_value);
+            }
+            else {
+                this->m_value.~T();
+                this->m_has_value = false;
+            }
+        }
+
+        if (rhs.has_value()) {
+            new (std::addressof(this->m_value)) T (std::move(rhs.m_value));
+            this->m_has_value = true;
+        }
+    }
+
+    // TODO conditionally delete, check exception guarantee
+    template <class U = T> optional& operator=(U&& u) {
+        if (has_value()) {
+            this->m_value = std::forward<U>(u);
+        }
+        else {
+            new (std::addressof(this->m_value)) T (std::forward<U>(u));
+            this->m_has_value = true;
+        }
+    }
+
+    // TODO SFINAE, check exception guarantee
+    template <class U> optional& operator=(const optional<U>& rhs) {
+        if (has_value()) {
+            if (rhs.has_value()) {
+                this->m_value = rhs.m_value;
+            }
+            else {
+                this->m_value.~T();
+                this->m_has_value = false;
+            }
+        }
+
+        if (rhs.has_value()) {
+            new (std::addressof(this->m_value)) T (rhs.m_value);
+            this->m_has_value = true;
+        }
+    }
+
+    // TODO SFINAE, check exception guarantee
+    template <class U> optional& operator=(optional<U>&& rhs) {
+        if (has_value()) {
+            if (rhs.has_value()) {
+                this->m_value = std::move(rhs.m_value);
+            }
+            else {
+                this->m_value.~T();
+                this->m_has_value = false;
+            }
+        }
+
+        if (rhs.has_value()) {
+            new (std::addressof(this->m_value)) T (std::move(rhs.m_value));
+            this->m_has_value = true;
+        }
+    }
 
     template <class... Args> T& emplace(Args&&... args) {
         static_assert(std::is_constructible<T, Args&&...>::value,
