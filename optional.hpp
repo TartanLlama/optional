@@ -293,7 +293,7 @@ inline constexpr bool operator==(const U &lhs, const optional<T> &rhs) {
 }
 template <class T, class U>
 inline constexpr bool operator!=(const optional<T> &lhs, const U &rhs) {
-  return lhs.has_value() ? *lhs != lhs : true;
+  return lhs.has_value() ? *lhs != rhs : true;
 }
 template <class T, class U>
 inline constexpr bool operator!=(const U &lhs, const optional<T> &rhs) {
@@ -301,7 +301,7 @@ inline constexpr bool operator!=(const U &lhs, const optional<T> &rhs) {
 }
 template <class T, class U>
 inline constexpr bool operator<(const optional<T> &lhs, const U &rhs) {
-  return lhs.has_value() ? *lhs < lhs : true;
+  return lhs.has_value() ? *lhs < rhs : true;
 }
 template <class T, class U>
 inline constexpr bool operator<(const U &lhs, const optional<T> &rhs) {
@@ -309,7 +309,7 @@ inline constexpr bool operator<(const U &lhs, const optional<T> &rhs) {
 }
 template <class T, class U>
 inline constexpr bool operator<=(const optional<T> &lhs, const U &rhs) {
-  return lhs.has_value() ? *lhs <= lhs : true;
+  return lhs.has_value() ? *lhs <= rhs : true;
 }
 template <class T, class U>
 inline constexpr bool operator<=(const U &lhs, const optional<T> &rhs) {
@@ -317,7 +317,7 @@ inline constexpr bool operator<=(const U &lhs, const optional<T> &rhs) {
 }
 template <class T, class U>
 inline constexpr bool operator>(const optional<T> &lhs, const U &rhs) {
-  return lhs.has_value() ? *lhs > lhs : false;
+  return lhs.has_value() ? *lhs > rhs : false;
 }
 template <class T, class U>
 inline constexpr bool operator>(const U &lhs, const optional<T> &rhs) {
@@ -325,7 +325,7 @@ inline constexpr bool operator>(const U &lhs, const optional<T> &rhs) {
 }
 template <class T, class U>
 inline constexpr bool operator>=(const optional<T> &lhs, const U &rhs) {
-  return lhs.has_value() ? *lhs >= lhs : false;
+  return lhs.has_value() ? *lhs >= rhs : false;
 }
 template <class T, class U>
 inline constexpr bool operator>=(const U &lhs, const optional<T> &rhs) {
