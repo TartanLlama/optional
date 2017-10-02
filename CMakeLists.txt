@@ -14,7 +14,8 @@ set(TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/in_place.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/relops.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/observers.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/monadic.cpp                  
+                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/monadic.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/constexpr.cpp                                   
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/nullopt.cpp)
                  
 add_executable(tests ${TEST_SOURCES})
