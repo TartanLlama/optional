@@ -1,0 +1,27 @@
+language: cpp
+
+dist: trusty
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - llvm-toolchain-3.9
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake-data
+      - cmake
+      - clang-3.9
+      - libc++-dev
+      - gcc-5
+      - g++-5
+
+compiler:
+  - clang
+  - gcc
+
+install:
+    - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.9 -stdlib=libc++" CC="clang-3.9"; fi
+    - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi    
+
+script: mkdir build && cd build && cmake .. && make && ./tests
