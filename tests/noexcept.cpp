@@ -30,13 +30,15 @@ TEST_CASE("Noexcept", "[noexcept]") {
     };
 
     struct throw_swappable {
+      throw_swappable(throw_swappable &&) {}
       throw_swappable &swap(const throw_swappable &) { return *this; }
     };
 
-    REQUIRE(noexcept(std::declval<nothrow_swappable>().swap(
-        std::declval<nothrow_swappable>())));
-    REQUIRE(!noexcept(
-        std::declval<throw_swappable>().swap(std::declval<throw_swappable>())));
+    tl::optional<nothrow_swappable> ont;
+    tl::optional<throw_swappable> ot;
+
+    REQUIRE(noexcept(ont.swap(ont)));
+    REQUIRE(!noexcept(ot.swap(ot)));
   }
 
   SECTION("constructors") {
@@ -44,17 +46,18 @@ TEST_CASE("Noexcept", "[noexcept]") {
     REQUIRE(noexcept(tl::optional<int>{tl::nullopt}));
 
     struct nothrow_move {
-      nothrow_move() = default;
       nothrow_move(nothrow_move &&) noexcept = default;
     };
 
     struct throw_move {
-      throw_move() = default;
-      throw_move(throw_move &&) = default;
+      throw_move(throw_move &&){};
     };
 
-    REQUIRE(noexcept(tl::optional<nothrow_move>{std::declval<nothrow_move>()}));
-    REQUIRE(!noexcept(tl::optional<throw_move>{std::declval<throw_move>()}));
+    using nothrow_opt = tl::optional<nothrow_move>;
+    using throw_opt = tl::optional<throw_move>;
+
+    REQUIRE(noexcept(nothrow_opt{std::declval<nothrow_opt>()}));
+    REQUIRE(!noexcept(throw_opt{std::declval<throw_opt>()}));
   }
 
   SECTION("assignment") {
@@ -72,10 +75,12 @@ TEST_CASE("Noexcept", "[noexcept]") {
       throw_move_assign &operator=(const throw_move_assign &) {}
     };
 
-    REQUIRE(noexcept(std::declval<nothrow_move_assign>() =
-                         std::declval<nothrow_move_assign>()));
-    REQUIRE(!noexcept(std::declval<throw_move_assign>() =
-                          std::declval<throw_move_assign>()));
+    using nothrow_opt = tl::optional<nothrow_move_assign>;
+    using throw_opt = tl::optional<throw_move_assign>;
+
+    REQUIRE(
+        noexcept(std::declval<nothrow_opt>() = std::declval<nothrow_opt>()));
+    REQUIRE(!noexcept(std::declval<throw_opt>() = std::declval<throw_opt>()));
   }
 
   SECTION("observers") {
@@ -83,7 +88,5 @@ TEST_CASE("Noexcept", "[noexcept]") {
     REQUIRE(noexcept(o1.has_value()));
   }
 
-  SECTION("modifiers") {
-    REQUIRE(noexcept(o1.reset()));
-  }
+  SECTION("modifiers") { REQUIRE(noexcept(o1.reset())); }
 }
