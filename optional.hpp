@@ -113,24 +113,24 @@ using invoke_result_t = typename invoke_result<F, Us...>::type;
 template <class U>
 using fixup_void = conditional_t<std::is_void<U>::value, monostate, U>;
 
-template <class F, class U> struct get_invoke_optional_ret {
+template <class F, class... U> struct get_invoke_optional_ret {
   using type = invoke_result_t<
       conditional_t<std::is_lvalue_reference<F>::value,
                     typename remove_reference_t<F>::value_type &,
                     typename remove_reference_t<F>::value_type &&>,
-      U>;
+      U...>;
 };
 
-template <class F, class U>
-using get_invoke_ret =
-    typename conditional_t<is_optional<F>::value, get_invoke_optional_ret<F, U>,
-                           invoke_result<F, U>>::type;
+template <class F, class... U>
+using get_invoke_ret = typename conditional_t<is_optional<F>::value,
+                                              get_invoke_optional_ret<F, U...>,
+                                              invoke_result<F, U...>>::type;
 
 template <class F, class U>
 using get_map_return = optional<fixup_void<get_invoke_ret<F, U>>>;
 
-template <class F, class U>
-using returns_void = std::is_void<get_invoke_ret<F, U>>;
+template <class F, class... U>
+using returns_void = std::is_void<get_invoke_ret<F, U...>>;
 
 template <class T>
 using disable_if_optional = enable_if_t<!is_optional<T>::value>;
@@ -138,11 +138,11 @@ using disable_if_optional = enable_if_t<!is_optional<T>::value>;
 template <class T>
 using enable_if_optional = enable_if_t<is_optional<T>::value>;
 
-template <class T, class U>
-using enable_if_ret_void = enable_if_t<returns_void<T &&, U>::value>;
+template <class T, class... U>
+using enable_if_ret_void = enable_if_t<returns_void<T &&, U...>::value>;
 
-template <class T, class U>
-using disable_if_ret_void = enable_if_t<!returns_void<T &&, U>::value>;
+template <class T, class... U>
+using disable_if_ret_void = enable_if_t<!returns_void<T &&, U...>::value>;
 }
 
 struct in_place_t {
@@ -766,7 +766,7 @@ public:
   }
 
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> bind(F &&f) & {
+  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
@@ -776,7 +776,7 @@ public:
   }
 
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> bind(F &&f) && {
+  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) && {
     using result = detail::invoke_result_t<F, T>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
@@ -786,7 +786,7 @@ public:
   }
 
   template <class F>
-  constexpr detail::invoke_result_t<F, T> bind(F &&f) const & {
+  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const & {
     using result = detail::invoke_result_t<F, T>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
@@ -796,76 +796,13 @@ public:
   }
 
   template <class F>
-  constexpr detail::invoke_result_t<F, T> bind(F &&f) const && {
+  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const && {
     using result = detail::invoke_result_t<F, T>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : result(nullopt);
-  }
-
-  template <class F, class E>
-      detail::invoke_result_t<F, T> bind(F &&f, E &&e) &
-      noexcept(noexcept(detail::invoke(std::forward<F>(f),
-                                       std::declval<T &>())) &&
-               noexcept(std::forward<E>(e)())) {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    if (!has_value())
-      return result(nullopt);
-
-    auto ret = detail::invoke(std::forward<F>(f), **this);
-    if (!ret)
-      detail::invoke(e);
-    return ret;
-  }
-
-  template <class F, class E>
-  detail::invoke_result_t<F, T> bind(F &&f, E &&e) && {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    if (!has_value())
-      return result(nullopt);
-
-    auto ret = detail::invoke(std::forward<F>(f), std::move(**this));
-    if (!ret)
-      detail::invoke(e);
-    return ret;
-  }
-
-  template <class F, class E>
-  detail::invoke_result_t<F, T> bind(F &&f, E &&e) const & {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    if (!has_value())
-      return result(nullopt);
-
-    auto ret = detail::invoke(std::forward<F>(f), **this);
-    if (!ret)
-      detail::invoke(e);
-    return ret;
-  }
-
-  template <class F, class E>
-  detail::invoke_result_t<F, T> bind(F &&f, E &&e) const && {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    if (!has_value())
-      return result(nullopt);
-
-    auto ret = detail::invoke(std::forward<F>(f), std::move(**this));
-    if (!ret)
-      detail::invoke(e);
-    return ret;
   }
 
   template <class F, detail::disable_if_optional<F> * = nullptr,
@@ -1017,6 +954,62 @@ public:
 
     detail::invoke(*std::forward<F>(f), std::move(**this));
     return monostate{};
+  }
+
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> constexpr or_else(F &&f) & {
+    if (has_value())
+      return *this;
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> constexpr or_else(F &&f) & {
+    return has_value() ? *this : std::forward<F>(f)();
+  }
+
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) && {
+    if (has_value())
+      return std::move(*this);
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> constexpr or_else(F &&f) && {
+    return has_value() ? std::move(*this) : std::forward<F>(f)();
+  }
+
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) const & {
+    if (has_value())
+      return *this;
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> constexpr or_else(F &&f) const & {
+    return has_value() ? *this : std::forward<F>(f)();
+  }
+
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) const && {
+    if (has_value())
+      return std::move(*this);
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) const && {
+    return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
 
   template <class F, class U> U map_or(F &&f, U &&u) & {
