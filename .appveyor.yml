@@ -1,12 +1,10 @@
 os:
-  - Visual Studio 2015
-
-configuration:
-  - Debug
+- Visual Studio 2015
+- Visual Studio 2017
 
 build_script:
   - mkdir build
   - cd build
   - cmake ..
-  - make
+  - cmake --build .
   - ./test.exe
