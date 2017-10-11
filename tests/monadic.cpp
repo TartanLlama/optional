@@ -319,6 +319,7 @@ SECTION("and_then") {
 }
 
 SECTION("constexpr and_then") {
+#ifndef _MSC_VER
   constexpr tl::optional<int> o10 = 42;
   constexpr auto o10r = o10.and_then(get_opt_int);
   REQUIRE(*o10r == 42);
@@ -334,6 +335,7 @@ SECTION("constexpr and_then") {
   constexpr tl::optional<int> o19 = tl::nullopt;
   constexpr auto o19r = std::move(o19).and_then(get_opt_int);
   REQUIRE(!o19r);
+#endif
 }
 
 SECTION("or else") {
