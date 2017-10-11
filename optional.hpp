@@ -235,7 +235,7 @@ struct is_adl_swap_noexcept
 #ifdef _MSC_VER
     // TODO make a version which works with MSVC
     template <class T, class U = T>
-    sturct is_swappable : std::true_type{};
+    struct is_swappable : std::true_type{};
 
     template <class T, class U = T>
     struct is_nothrow_swappable : std::true_type{};
