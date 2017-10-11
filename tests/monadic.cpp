@@ -192,6 +192,7 @@ REQUIRE(!o39r);
 }
 
 SECTION("map constexpr") {
+#ifndef _MSC_VER
   // test each overload in turn
   constexpr tl::optional<int> o16 = 42;
   constexpr auto o16r = o16.map(get_int);
@@ -225,6 +226,7 @@ SECTION("map constexpr") {
   constexpr tl::optional<int> o38 = tl::nullopt;
   constexpr auto o38r = std::move(o38).map(opt_int);
   STATIC_REQUIRE(!o38r);
+#endif
 }
 
 SECTION("and_then") {
