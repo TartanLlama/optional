@@ -232,6 +232,14 @@ struct is_adl_swap_noexcept
     : std::integral_constant<bool, noexcept(can_swap<T, U>(0))> {};
 }
 
+#ifdef _MSC_VER
+    // TODO make a version which works with MSVC
+    template <class T, class U = T>
+    sturct is_swappable : std::true_type{};
+
+    template <class T, class U = T>
+    struct is_nothrow_swappable : std::true_type{};
+#else
 template <class T, class U = T>
 struct is_swappable
     : std::integral_constant<
@@ -261,6 +269,8 @@ struct is_nothrow_swappable
                     detail::swap_adl_tests::is_adl_swap_noexcept<T,
                                                                  U>::value))> {
 };
+#endif
+
 }
 
 // [optional.nullopt], no-value state indicator
