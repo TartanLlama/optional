@@ -9,14 +9,12 @@
 
 TEST_CASE("Constexpr", "[constexpr]") {
   SECTION("empty construct") {
-    constexpr tl::optional<int> o1;
     constexpr tl::optional<int> o2{};
     constexpr tl::optional<int> o3 = {};
     constexpr tl::optional<int> o4 = tl::nullopt;
     constexpr tl::optional<int> o5 = {tl::nullopt};
     constexpr tl::optional<int> o6(tl::nullopt);
 
-    STATIC_REQUIRE(!o1);
     STATIC_REQUIRE(!o2);
     STATIC_REQUIRE(!o3);
     STATIC_REQUIRE(!o4);
