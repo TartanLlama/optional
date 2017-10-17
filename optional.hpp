@@ -468,10 +468,10 @@ namespace tl {
 namespace detail {
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
-  constexpr optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
+    TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
 
   template <class... U>
-  constexpr optional_storage_base(in_place_t, U &&... u) noexcept
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() {
@@ -491,10 +491,12 @@ struct optional_storage_base {
 };
 
 template <class T> struct optional_storage_base<T, true> {
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept
+      : m_dummy(), m_has_value(false) {}
 
   template <class... U>
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t,
+                                                        U &&... u) noexcept
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() = default;
