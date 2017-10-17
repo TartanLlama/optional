@@ -8,7 +8,7 @@
   REQUIRE(e);
 
 constexpr int get_int(int) { return 42; }
-constexpr tl::optional<int> get_opt_int(int) { return 42; }
+TL_OPTIONAL_MSVC_2015_CONSTEXPR tl::optional<int> get_opt_int(int) { return 42; }
 
 // What is Clang Format up to?!
 TEST_CASE("Monadic operations",
