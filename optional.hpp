@@ -85,19 +85,17 @@ template <class T> struct is_optional_impl<optional<T>> : std::true_type {};
 template <class T> using is_optional = is_optional_impl<decay_t<T>>;
 
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
-template <
-    typename Fn, typename... Args,
-    typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
-    int = 0>
+template <typename Fn, typename... Args,
+          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
+          int = 0>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
     noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
     -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
   return std::mem_fn(f)(std::forward<Args>(args)...);
 }
 
-template <
-    typename Fn, typename... Args,
-    typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
+template <typename Fn, typename... Args,
+          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
     noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
     -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
@@ -493,10 +491,10 @@ struct optional_storage_base {
 };
 
 template <class T> struct optional_storage_base<T, true> {
-  constexpr optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
 
   template <class... U>
-  constexpr optional_storage_base(in_place_t, U &&... u) noexcept
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() = default;
