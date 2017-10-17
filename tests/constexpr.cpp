@@ -8,6 +8,7 @@
   REQUIRE(e);
 
 TEST_CASE("Constexpr", "[constexpr]") {
+#if !(_MSC_VER == 1900)
   SECTION("empty construct") {
     constexpr tl::optional<int> o2{};
     constexpr tl::optional<int> o3 = {};
@@ -42,4 +43,5 @@ TEST_CASE("Constexpr", "[constexpr]") {
     STATIC_REQUIRE(*o7 == 42);
     STATIC_REQUIRE(*o8 == 42);
   }
+  #endif
 }
