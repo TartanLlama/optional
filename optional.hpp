@@ -17,10 +17,16 @@
 #include <type_traits>
 #include <utility>
 
-#if __cplusplus == 201103L
+#if __cplusplus == 201103L || _MSC_VER == 1900
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
 #define TL_OPTIONAL_11_CONSTEXPR constexpr
+#endif
+
+#if _MSC_VER == 1900
+#define TL_OPTIONAL_MSVC_2015_CONSTEXPR
+#else
+#define TL_OPTIONAL_MSVC_2015_CONSTEXPR constexpr
 #endif
 
 namespace tl {
@@ -79,16 +85,19 @@ template <class T> struct is_optional_impl<optional<T>> : std::true_type {};
 template <class T> using is_optional = is_optional_impl<decay_t<T>>;
 
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
-template <typename Fn, typename... Args,
-          enable_if_t<std::is_member_pointer<decay_t<Fn>>{}, int> = 0>
+template <
+    typename Fn, typename... Args,
+    typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
+    int = 0>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
     noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
     -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
   return std::mem_fn(f)(std::forward<Args>(args)...);
 }
 
-template <typename Fn, typename... Args,
-          enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}, int> = 0>
+template <
+    typename Fn, typename... Args,
+    typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
     noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
     -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
@@ -143,7 +152,7 @@ using enable_if_ret_void = enable_if_t<returns_void<T &&, U...>::value>;
 
 template <class T, class... U>
 using disable_if_ret_void = enable_if_t<!returns_void<T &&, U...>::value>;
-}
+} // namespace detail
 
 struct in_place_t {
   explicit in_place_t() = default;
@@ -196,6 +205,12 @@ using enable_assign_from_other = detail::enable_if_t<
     !std::is_assignable<T &, const optional<U> &>::value &&
     !std::is_assignable<T &, const optional<U> &&>::value>;
 
+#ifdef _MSC_VER
+// TODO make a version which works with MSVC
+template <class T, class U = T> struct is_swappable : std::true_type {};
+
+template <class T, class U = T> struct is_nothrow_swappable : std::true_type {};
+#else
 // https://stackoverflow.com/questions/26744589/what-is-a-proper-way-to-implement-is-swappable-to-test-for-the-swappable-concept
 namespace swap_adl_tests {
 // if swap ADL finds this then it would call std::swap otherwise (same
@@ -230,16 +245,8 @@ struct is_std_swap_noexcept<T[N]> : is_std_swap_noexcept<T> {};
 template <class T, class U>
 struct is_adl_swap_noexcept
     : std::integral_constant<bool, noexcept(can_swap<T, U>(0))> {};
-}
+} // namespace swap_adl_tests
 
-#ifdef _MSC_VER
-    // TODO make a version which works with MSVC
-    template <class T, class U = T>
-    struct is_swappable : std::true_type{};
-
-    template <class T, class U = T>
-    struct is_nothrow_swappable : std::true_type{};
-#else
 template <class T, class U = T>
 struct is_swappable
     : std::integral_constant<
@@ -271,7 +278,7 @@ struct is_nothrow_swappable
 };
 #endif
 
-}
+} // namespace detail
 
 // [optional.nullopt], no-value state indicator
 struct nullopt_t {
@@ -444,7 +451,7 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
                                            Args &&... args) {
   return optional<T>(in_place, il, std::forward<Args>(args)...);
 }
-}
+} // namespace tl
 
 // [optional.hash], hash support
 namespace std {
@@ -457,7 +464,7 @@ template <class T> struct hash<tl::optional<T>> {
     return hash<tl::detail::remove_const_t<T>>()(*o);
   }
 };
-}
+} // namespace std
 
 namespace tl {
 namespace detail {
@@ -502,7 +509,7 @@ template <class T> struct optional_storage_base<T, true> {
 
   bool m_has_value = false;
 };
-}
+} // namespace detail
 
 template <class T> class optional : private detail::optional_storage_base<T> {
   using base = detail::optional_storage_base<T>;
@@ -967,7 +974,7 @@ public:
   }
 
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
-  optional<T> constexpr or_else(F &&f) & {
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
     if (has_value())
       return *this;
 
@@ -976,7 +983,7 @@ public:
   }
 
   template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> constexpr or_else(F &&f) & {
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
     return has_value() ? *this : std::forward<F>(f)();
   }
 
@@ -990,7 +997,7 @@ public:
   }
 
   template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> constexpr or_else(F &&f) && {
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) && {
     return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
 
@@ -1004,7 +1011,7 @@ public:
   }
 
   template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> constexpr or_else(F &&f) const & {
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) const & {
     return has_value() ? *this : std::forward<F>(f)();
   }
 
@@ -1064,4 +1071,4 @@ public:
 };
 
 // template <class T> optional(T)->optional<T>;
-}
+} // namespace tl
