@@ -30,6 +30,8 @@ TEST_CASE("Noexcept", "[noexcept]") {
     };
 
     struct throw_swappable {
+      throw_swappable() = default;
+      throw_swappable(const throw_swappable &) {}
       throw_swappable(throw_swappable &&) {}
       throw_swappable &swap(const throw_swappable &) { return *this; }
     };
