@@ -28,10 +28,12 @@ target_link_libraries(tests Catch optional)
 set_property(TARGET tests PROPERTY CXX_STANDARD 14)
 
 
-find_package(standardese REQUIRED) # find standardese after installation
+find_package(standardese) # find standardese after installation
 
 # generates a custom target that will run standardese to generate the documentation
+if (STANDARDESE_VERSION)
 standardese_generate(optional
                      INCLUDE_DIRECTORY .
                      CONFIG ${CMAKE_SOURCE_DIR}/standardese.config
                      INPUT optional.hpp)
+endif ()
