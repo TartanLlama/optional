@@ -53,6 +53,8 @@ template <class T> class optional;
 
 /// \exclude
 namespace detail {
+
+// C++14-style aliases for brevity
 template <class T> using remove_const_t = typename std::remove_const<T>::type;
 template <class T>
 using remove_reference_t = typename std::remove_reference<T>::type;
@@ -62,21 +64,23 @@ using enable_if_t = typename std::enable_if<E, T>::type;
 template <bool B, class T, class F>
 using conditional_t = typename std::conditional<B, T, F>::type;
 
+// std::conjunction from C++17
 template <class...> struct conjunction : std::true_type {};
 template <class B> struct conjunction<B> : B {};
 template <class B, class... Bs>
 struct conjunction<B, Bs...>
     : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
 
+// std::void_t from C++17
 template <class...> struct voider { using type = void; };
 template <class... Ts> using void_t = typename voider<Ts...>::type;
 
+// Trait for checking if a type is a tl::optional
 template <class T> struct is_optional_impl : std::false_type {};
-
 template <class T> struct is_optional_impl<optional<T>> : std::true_type {};
-
 template <class T> using is_optional = is_optional_impl<decay_t<T>>;
 
+// std::invoke from C++17
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
 template <typename Fn, typename... Args,
           typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
@@ -95,6 +99,7 @@ constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
   return std::forward<Fn>(f)(std::forward<Args>(args)...);
 }
 
+// std::invoke_result from C++17
 template <class F, class, class... Us> struct invoke_result_impl;
 
 template <class F, class... Us>
@@ -110,6 +115,8 @@ using invoke_result = invoke_result_impl<F, void, Us...>;
 template <class F, class... Us>
 using invoke_result_t = typename invoke_result<F, Us...>::type;
 
+
+// Change void to tl::monostate
 template <class U>
 using fixup_void = conditional_t<std::is_void<U>::value, monostate, U>;
 
@@ -129,6 +136,7 @@ using get_invoke_ret = typename conditional_t<is_optional<F>::value,
 template <class F, class U>
 using get_map_return = optional<fixup_void<get_invoke_ret<F, U>>>;
 
+// Check if invoking F for some Us returns void
 template <class F, class... U>
 using returns_void = std::is_void<get_invoke_ret<F, U...>>;
 
