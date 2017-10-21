@@ -31,7 +31,7 @@ set_property(TARGET tests PROPERTY CXX_STANDARD 14)
 find_package(standardese) # find standardese after installation
 
 # generates a custom target that will run standardese to generate the documentation
-if (STANDARDESE_VERSION)
+if (standardese_FOUND)
 standardese_generate(optional
                      INCLUDE_DIRECTORY .
                      CONFIG ${CMAKE_SOURCE_DIR}/standardese.config
