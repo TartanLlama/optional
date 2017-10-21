@@ -977,7 +977,7 @@ public:
   optional &operator=(const optional<U> &rhs) {
     if (has_value()) {
       if (rhs.has_value()) {
-        this->m_value = rhs.m_value;
+        this->m_value = *rhs;
       } else {
         this->m_value.~T();
         this->m_has_value = false;
@@ -985,7 +985,7 @@ public:
     }
 
     if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(rhs.m_value);
+      new (std::addressof(this->m_value)) T(*rhs);
       this->m_has_value = true;
     }
   }
@@ -999,7 +999,7 @@ public:
   optional &operator=(optional<U> &&rhs) {
     if (has_value()) {
       if (rhs.has_value()) {
-        this->m_value = std::move(rhs.m_value);
+        this->m_value = std::move(*rhs);
       } else {
         this->m_value.~T();
         this->m_has_value = false;
@@ -1007,7 +1007,7 @@ public:
     }
 
     if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
+      new (std::addressof(this->m_value)) T(std::move(*rhs));
       this->m_has_value = true;
     }
   }
