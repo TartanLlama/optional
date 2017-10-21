@@ -149,20 +149,58 @@ Represents an empty optional
 class optional
 {
 public:
-    template &lt;class F&gt; constexpr auto and_then(F &amp;&amp;f);
-    template &lt;class F&gt; constexpr auto and_then(F &amp;&amp;f) const;
+    template &lt;class F&gt;
+    constexpr auto and_then(F &amp;&amp;f) &amp;;
+    template &lt;class F&gt;
+    constexpr auto and_then(F &amp;&amp;f) &amp;&amp;;
+    template &lt;class F&gt;
+    constexpr auto and_then(F &amp;&amp;f) const &amp;;
+    template &lt;class F&gt;
+    constexpr auto and_then(F &amp;&amp;f) const &amp;&amp;;
     
-    template &lt;class F&gt; auto map(F &amp;&amp;f);
-    template &lt;class F&gt; auto map(F &amp;&amp;f) const;
+    template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;;
+    template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;&amp;;
+    template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;;
+    template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;&amp;;
     
-    template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f);
-    template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) const;
+    template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) &amp;;
+    template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) &amp;&amp;;
+    template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) const &amp;;
     
-    template &lt;class F, class U&gt; U map_or(F &amp;&amp;f, U &amp;&amp;u);
-    template &lt;class F, class U&gt; U map_or(F &amp;&amp;f, U &amp;&amp;u) const;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
     
-    template &lt;class F, class U&gt; U map_or_else(F &amp;&amp;f, U &amp;&amp;u);
-    template &lt;class F, class U&gt; U map_or_else(F &amp;&amp;f, U &amp;&amp;u) const;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
+    
+    template &lt;class U&gt;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional&lt;U&gt;</a> <a href='doc_optional.md#tl::optional-T-::conjunction(U&&)const'>conjunction</a>(U&amp;&amp; u) const;
+    
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) &amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) const &amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) &amp;&amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) const &amp;&amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) &amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) const &amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) &amp;&amp;;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) const &amp;&amp;;
+    
+    <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::take()&'>take</a>() &amp;;
+    <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::take()&'>take</a>() const &amp;;
+    <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::take()&'>take</a>() &amp;&amp;;
+    <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::take()&'>take</a>() const &amp;&amp;;
     
     using <a href='doc_optional.md#tl::optional-T-'>value_type</a> = T;
     
@@ -228,9 +266,17 @@ An optional object is an object that contains the storage for another object and
 
 ### Function template `tl::optional::and_then`<a id="tl::optional-T-::and_then(F&&)&"></a>
 
-<pre><code class="language-cpp">(1)  template &lt;class F&gt; constexpr auto and_then(F &amp;&amp;f);
+<pre><code class="language-cpp">(1)  template &lt;class F&gt;
+     constexpr auto and_then(F &amp;&amp;f) &amp;;
 
-(2)  template &lt;class F&gt; constexpr auto and_then(F &amp;&amp;f) const;</code></pre>
+(2)  template &lt;class F&gt;
+     constexpr auto and_then(F &amp;&amp;f) &amp;&amp;;
+
+(3)  template &lt;class F&gt;
+     constexpr auto and_then(F &amp;&amp;f) const &amp;;
+
+(4)  template &lt;class F&gt;
+     constexpr auto and_then(F &amp;&amp;f) const &amp;&amp;;</code></pre>
 
 Carries out some operation which returns an optional on the stored object if there is one.
 
@@ -240,9 +286,13 @@ Carries out some operation which returns an optional on the stored object if the
 
 ### Function template `tl::optional::map`<a id="tl::optional-T-::map(F&&)&"></a>
 
-<pre><code class="language-cpp">(1)  template &lt;class F&gt; auto map(F &amp;&amp;f);
+<pre><code class="language-cpp">(1)  template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;;
 
-(2)  template &lt;class F&gt; auto map(F &amp;&amp;f) const;</code></pre>
+(2)  template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;&amp;;
+
+(3)  template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;;
+
+(4)  template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;&amp;;</code></pre>
 
 Carries out some operation on the stored object if there is one.
 
@@ -250,9 +300,11 @@ Carries out some operation on the stored object if there is one.
 
 ### Function template `tl::optional::or_else`<a id="tl::optional-T-::or_else(F&&)&"></a>
 
-<pre><code class="language-cpp">(1)  template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f);
+<pre><code class="language-cpp">(1)  template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) &amp;;
 
-(2)  template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) const;</code></pre>
+(2)  template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) &amp;&amp;;
+
+(3)  template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) const &amp;;</code></pre>
 
 Calls `f` if the optional is empty
 
@@ -262,9 +314,17 @@ Calls `f` if the optional is empty
 
 ### Function template `tl::optional::map_or`<a id="tl::optional-T-::map_or(F&&,U&&)&"></a>
 
-<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt; U map_or(F &amp;&amp;f, U &amp;&amp;u);
+<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) &amp;;
 
-(2)  template &lt;class F, class U&gt; U map_or(F &amp;&amp;f, U &amp;&amp;u) const;</code></pre>
+(2)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+
+(3)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+
+(4)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;</code></pre>
 
 Maps the stored value with `f` if there is one, otherwise returns `u`
 
@@ -272,13 +332,60 @@ If there is a value stored, then `f` is called with `**this` and the value is re
 
 ### Function template `tl::optional::map_or_else`<a id="tl::optional-T-::map_or_else(F&&,U&&)&"></a>
 
-<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt; U map_or_else(F &amp;&amp;f, U &amp;&amp;u);
+<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) &amp;;
 
-(2)  template &lt;class F, class U&gt; U map_or_else(F &amp;&amp;f, U &amp;&amp;u) const;</code></pre>
+(2)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+
+(3)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+
+(4)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;</code></pre>
 
 Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
 
 If there is a value stored, then `f` is called with `**this` and the value is returned. Otherwise `std::forward<U>(u)()` is returned.
+
+### Function template `tl::optional::conjunction`<a id="tl::optional-T-::conjunction(U&&)const"></a>
+
+<pre><code class="language-cpp">template &lt;class U&gt;
+constexpr <a href='doc_optional.md#tl::optional-T-'>optional&lt;U&gt;</a> conjunction(U&amp;&amp; u) const;</code></pre>
+
+*Returns*: `u` if `*this` has a value, otherwise an empty optional.
+
+### Function `tl::optional::disjunction`<a id="tl::optional-T-::disjunction(constoptional-T-&)&"></a>
+
+<pre><code class="language-cpp">(1)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) &amp;;
+
+(2)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) const &amp;;
+
+(3)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) &amp;&amp;;
+
+(4)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) const &amp;&amp;;
+
+(5)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) &amp;;
+
+(6)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) const &amp;;
+
+(7)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) &amp;&amp;;
+
+(8)  constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> disjunction(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) const &amp;&amp;;</code></pre>
+
+*Returns*: `rhs` if `*this` is empty, otherwise the current value.
+
+### Function `tl::optional::take`<a id="tl::optional-T-::take()&"></a>
+
+<pre><code class="language-cpp">(1)  <a href='doc_optional.md#tl::optional-T-'>optional</a> take() &amp;;
+
+(2)  <a href='doc_optional.md#tl::optional-T-'>optional</a> take() const &amp;;
+
+(3)  <a href='doc_optional.md#tl::optional-T-'>optional</a> take() &amp;&amp;;
+
+(4)  <a href='doc_optional.md#tl::optional-T-'>optional</a> take() const &amp;&amp;;</code></pre>
+
+Takes the value out of the optional, leaving it empty
 
 ### Default constructor `tl::optional::optional`<a id="tl::optional-T-::optional()"></a>
 
@@ -335,7 +442,7 @@ Converting move constructor.
 
 <pre><code class="language-cpp">~optional() = default;</code></pre>
 
-Destructor.
+Destroys the stored value if there is one.
 
 ### Assignment operator `tl::optional::operator=`<a id="tl::optional-T-::operator=(tl::nullopt_t)"></a>
 
