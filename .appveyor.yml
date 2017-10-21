@@ -7,4 +7,4 @@ build_script:
   - cd build
   - cmake ..
   - cmake --build .
-  - C:\projects\monadic-optional\build\Debug\tests.exe
+  - C:\projects\optional\build\Debug\tests.exe
