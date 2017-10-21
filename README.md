@@ -84,11 +84,6 @@ Tested on:
   * g++ 7.2
   * g++ 5.4
 
-Unsupported, but planning to support:
-
-- g++ 4.8
-
-
 ### Dependencies
 
 Requires [Standardese](https://github.com/foonathan/standardese) for generating documentation.
