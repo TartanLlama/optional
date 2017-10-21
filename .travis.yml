@@ -6,21 +6,11 @@ sudo: false
 addons:
   apt:
     sources:
-      - llvm-toolchain-precise-3.6
-      - llvm-toolchain-precise-3.7
-      - llvm-toolchain-precise-3.8
-      - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
-        key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
       - ubuntu-toolchain-r-test
     packages:
       - cmake-data
       - cmake
-      - clang-3.6
-      - clang-3.7
-      - clang-3.8
-      - clang-3.9
       - libc++-dev
-      - gcc-5
       - g++-5
 
 matrix:
@@ -28,12 +18,29 @@ matrix:
     - compiler: gcc
       env: COMPILER=g++-5
     - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.6
       env: COMPILER=clang++-3.6
     - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.7
       env: COMPILER=clang++-3.7
     - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.8
       env: COMPILER=clang++-3.8
     - compiler: clang
+      addons:
+        apt:
+          sources:
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+              key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
       env: COMPILER=clang++-3.9
 
 
