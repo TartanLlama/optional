@@ -13,7 +13,7 @@ The interface is the same as `std::optional`, but the following member functions
   * `tl::optional<int> stoi (const std::string& s);`
   * `tl::optional<int> i = opt_string.and_then(stoi);`
 - `or_else`: calls some function if there is no value stored.
-  * `opt.or_else([] { throw std::runtime_error{"oh no"]; });
+  * `opt.or_else([] { throw std::runtime_error{"oh no"]; });`
 - `map_or`: carries out a `map` if there is a value, otherwise returns a default value.
   * `tl::optional<std::size_t> s = opt_string.map_or(&std::string::size, 0);`
 - `map_or_else`: carries out a `map` if there is a value, otherwise returns the result of a given default function.
