@@ -18,20 +18,35 @@
 #include <utility>
 
 #if __cplusplus == 201103L || _MSC_VER == 1900
+/// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
+/// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR constexpr
 #endif
 
 #if _MSC_VER == 1900
+/// \exclude
 #define TL_OPTIONAL_MSVC_2015_CONSTEXPR
 #else
+/// \exclude
 #define TL_OPTIONAL_MSVC_2015_CONSTEXPR constexpr
 #endif
 
 namespace tl {
-template <class T> class optional;
+/// \brief Represents an optional with no data; essentially a bool
 class monostate {};
+
+/// \brief A tag type to tell optional to construct its value in-place
+struct in_place_t {
+  explicit in_place_t() = default;
+};
+/// \brief A tag to tell optional to construct its value in-place
+static constexpr in_place_t in_place{};
+
+template <class T> class optional;
+
+/// \exclude
 namespace detail {
 template <class T> using remove_cv_t = typename std::remove_cv<T>::type;
 template <class T> using remove_const_t = typename std::remove_const<T>::type;
@@ -150,17 +165,7 @@ using enable_if_ret_void = enable_if_t<returns_void<T &&, U...>::value>;
 
 template <class T, class... U>
 using disable_if_ret_void = enable_if_t<!returns_void<T &&, U...>::value>;
-} // namespace detail
 
-struct in_place_t {
-  explicit in_place_t() = default;
-};
-static constexpr in_place_t in_place{};
-
-// [optional.optional], class template optional
-template <class T> class optional;
-
-namespace detail {
 template <class T, class U>
 using enable_forward_value =
     detail::enable_if_t<std::is_constructible<T, U &&>::value &&
@@ -278,156 +283,201 @@ struct is_nothrow_swappable
 
 } // namespace detail
 
-// [optional.nullopt], no-value state indicator
+/// \brief A tag type to represent an empty optional
 struct nullopt_t {
   struct do_not_use {};
   constexpr explicit nullopt_t(do_not_use, do_not_use) noexcept {}
 };
+/// \brief Represents an empty optional
+/// \synopsis static constexpr nullopt_t nullopt;
+///
+/// *Examples*:
+/// ```
+/// tl::optional<int> a = tl::nullopt;
+/// void foo (tl::optional<int>);
+/// foo(tl::nullopt); //pass an empty optional
+/// ```
 static constexpr nullopt_t nullopt{nullopt_t::do_not_use{},
                                    nullopt_t::do_not_use{}};
 
-// [optional.bad.access], class bad_optional_access
 class bad_optional_access : public std::exception {
 public:
   bad_optional_access() = default;
   const char *what() const noexcept { return "Optional has no value"; }
 };
 
-// [optional.relops], relational operators
+/// \group relop
+/// \brief Compares two optional objects
+/// \details If both optionals contain a value, they are compared with `T`s relational operators.
+/// Otherwise `lhs` and `rhs` are equal only if they are both empty, and `lhs` is less than `rhs`
+/// only if `rhs` is empty and `lhs` is not.
 template <class T, class U>
 inline constexpr bool operator==(const optional<T> &lhs,
                                  const optional<U> &rhs) {
   return lhs.has_value() == rhs.has_value() &&
          (!lhs.has_value() || *lhs == *rhs);
 }
+/// \group relop
 template <class T, class U>
 inline constexpr bool operator!=(const optional<T> &lhs,
                                  const optional<U> &rhs) {
   return lhs.has_value() != rhs.has_value() ||
          (lhs.has_value() && *lhs != *rhs);
 }
+/// \group relop
 template <class T, class U>
 inline constexpr bool operator<(const optional<T> &lhs,
                                 const optional<U> &rhs) {
   return rhs.has_value() && (!lhs.has_value() || *lhs < *rhs);
 }
+/// \group relop
 template <class T, class U>
 inline constexpr bool operator>(const optional<T> &lhs,
                                 const optional<U> &rhs) {
   return lhs.has_value() && (!rhs.has_value() || *lhs > *rhs);
 }
+/// \group relop
 template <class T, class U>
 inline constexpr bool operator<=(const optional<T> &lhs,
                                  const optional<U> &rhs) {
   return !lhs.has_value() || (rhs.has_value() && *lhs <= *rhs);
 }
+/// \group relop
 template <class T, class U>
 inline constexpr bool operator>=(const optional<T> &lhs,
                                  const optional<U> &rhs) {
   return !rhs.has_value() || (lhs.has_value() && *lhs >= *rhs);
 }
 
-// [optional.nullops], comparison with nullopt
+/// \group relop_nullopt
+/// \brief Compares an optional to a `nullopt`
+/// \details Equivalent to comparing the optional to an empty optional
 template <class T>
 inline constexpr bool operator==(const optional<T> &lhs, nullopt_t) noexcept {
   return !lhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator==(nullopt_t, const optional<T> &rhs) noexcept {
   return !rhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator!=(const optional<T> &lhs, nullopt_t) noexcept {
   return lhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator!=(nullopt_t, const optional<T> &rhs) noexcept {
   return rhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator<(const optional<T> &, nullopt_t) noexcept {
   return false;
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator<(nullopt_t, const optional<T> &rhs) noexcept {
   return rhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator<=(const optional<T> &lhs, nullopt_t) noexcept {
   return !lhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator<=(nullopt_t, const optional<T> &) noexcept {
   return true;
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator>(const optional<T> &lhs, nullopt_t) noexcept {
   return lhs.has_value();
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator>(nullopt_t, const optional<T> &) noexcept {
   return false;
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator>=(const optional<T> &, nullopt_t) noexcept {
   return true;
 }
+/// \group relop_nullopt
 template <class T>
 inline constexpr bool operator>=(nullopt_t, const optional<T> &rhs) noexcept {
   return !rhs.has_value();
 }
 
-// [optional.comp_with_t], comparison with T
+
+/// \group relop_t
+/// \brief Compares the optional with a value.
+/// \details If the optional has a value, it is compared with the other value using `T`s relational operators.
+/// Otherwise, the optional is considered less than the value.
 template <class T, class U>
 inline constexpr bool operator==(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs == rhs : false;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator==(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs == *rhs : false;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator!=(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs != rhs : true;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator!=(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs != *rhs : true;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator<(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs < rhs : true;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator<(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs < *rhs : false;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator<=(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs <= rhs : true;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator<=(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs <= *rhs : false;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator>(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs > rhs : false;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator>(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs > *rhs : true;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator>=(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs >= rhs : false;
 }
+/// \group relop_t
 template <class T, class U>
 inline constexpr bool operator>=(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs >= *rhs : true;
 }
 
-// [optional.specalg], specialized algorithms
+/// \synopsis template <class T>\nvoid swap(optional<T> &lhs, optional<T> &rhs);
 template <class T,
           detail::enable_if_t<std::is_move_constructible<T>::value> * = nullptr,
           detail::enable_if_t<detail::is_swappable<T>::value> * = nullptr>
@@ -451,7 +501,6 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
 }
 } // namespace tl
 
-// [optional.hash], hash support
 namespace std {
 // TODO SFINAE
 template <class T> struct hash<tl::optional<T>> {
@@ -459,12 +508,13 @@ template <class T> struct hash<tl::optional<T>> {
     if (!o.has_value())
       return 0;
 
-    return hash<tl::detail::remove_const_t<T>>()(*o);
+    return std::hash<tl::detail::remove_const_t<T>>()(*o);
   }
 };
 } // namespace std
 
 namespace tl {
+/// \exclude
 namespace detail {
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
@@ -511,15 +561,24 @@ template <class T> struct optional_storage_base<T, true> {
 };
 } // namespace detail
 
+
+/// An optional object is an object that contains the storage for another object and manages the lifetime of this contained object, if any. The contained object may be initialized after the optional object has been initialized, and may be destroyed before the optional object has been destroyed. The initialization state of the contained object is tracked by the optional object.
 template <class T> class optional : private detail::optional_storage_base<T> {
   using base = detail::optional_storage_base<T>;
 
 public:
   using value_type = T;
 
-  // [optional.ctor], constructors
+  /// Constructs an optional that does not contain a value.
   constexpr optional() noexcept = default;
+
+  /// Constructs an optional that does not contain a value.
   constexpr optional(nullopt_t) noexcept {};
+
+  /// Copy constructor
+  ///
+  /// If `rhs` contains a value, the stored value is direct-initialized with it.
+  /// Otherwise, the constructed optional is empty.
   TL_OPTIONAL_11_CONSTEXPR optional(const optional &rhs) {
     if (rhs.has_value()) {
       this->m_has_value = true;
@@ -528,6 +587,10 @@ public:
   }
 
   // TODO conditionally disable
+  /// Move constructor
+  ///
+  /// If `rhs` contains a value, the stored value is direct-initialized with it.
+  /// Otherwise, the constructed optional is empty.
   TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value) {
     if (rhs.has_value()) {
@@ -594,10 +657,8 @@ public:
     new (std::addressof(this->m_value)) T(std::move(*rhs));
   }
 
-  // [optional.dtor], destructor
   ~optional() = default;
 
-  // [optional.assign], assignment
   optional &operator=(nullopt_t) noexcept {
     if (has_value()) {
       this->m_value.~T();
@@ -706,7 +767,6 @@ public:
     new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
   }
 
-  // [optional.swap], swap
   void
   swap(optional &rhs) noexcept(std::is_nothrow_move_constructible<T>::value
                                    &&detail::is_nothrow_swappable<T>::value) {
@@ -724,7 +784,6 @@ public:
     }
   }
 
-  // [optional.observe], observers
   constexpr const T *operator->() const {
     return std::addressof(this->m_value);
   }
@@ -774,7 +833,6 @@ public:
     return has_value() ? **this : static_cast<T>(std::forward<U>(u));
   }
 
-  // [optional.mod], modifiers
   void reset() noexcept {
     if (has_value()) {
       this->m_value.~T();
@@ -782,6 +840,11 @@ public:
     }
   }
 
+
+  /// \group and_then
+  /// Carries out some operation which returns an optional on the stored object if there is one.
+  /// \requires `std::invoke(std::forward<F>(f), value())` returns a `std::optional<U>` for some `U`.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
   template <class F>
   TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T>;
@@ -792,6 +855,10 @@ public:
                        : result(nullopt);
   }
 
+  /// \group and_then_rval
+  /// Carries out some operation which returns an optional on the stored object if there is one.
+  /// \requires `std::invoke(std::forward<F>(f), std::move(value()))` returns a `std::optional<U>` for some `U`.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), std::move(value()))`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), std::move(value()))` is returned.
   template <class F>
   TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) && {
     using result = detail::invoke_result_t<F, T>;
@@ -802,6 +869,7 @@ public:
                        : result(nullopt);
   }
 
+  /// \group and_then
   template <class F>
   constexpr detail::invoke_result_t<F, T> and_then(F &&f) const & {
     using result = detail::invoke_result_t<F, T>;
@@ -812,6 +880,7 @@ public:
                        : result(nullopt);
   }
 
+  /// \group and_then_rval
   template <class F>
   constexpr detail::invoke_result_t<F, T> and_then(F &&f) const && {
     using result = detail::invoke_result_t<F, T>;
@@ -822,6 +891,10 @@ public:
                        : result(nullopt);
   }
 
+  /// \group map
+  /// \synopsis template <class F> auto map(F &&f) &;
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), value())` and is returned.
   template <class F, detail::disable_if_optional<F> * = nullptr,
             detail::disable_if_ret_void<F, T &> * = nullptr>
       detail::get_map_return<F, T &> map(F &&f) &
@@ -861,6 +934,10 @@ public:
     return monostate{};
   }
 
+  /// \group map_rval
+  /// \synopsis template <class F> auto map(F &&f) &;
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), std::move(value()))`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), std::move(value()))` and is returned.
   template <class F, detail::disable_if_optional<F> * = nullptr,
             detail::disable_if_ret_void<F, T &&> * = nullptr>
   detail::get_map_return<F, T &&> map(F &&f) && {
@@ -898,6 +975,8 @@ public:
     return monostate{};
   }
 
+  /// \group map
+  /// \synopsis template <class F> auto map(F &&f) const &;
   template <class F, detail::disable_if_optional<F> * = nullptr,
             detail::disable_if_ret_void<F, T const &> * = nullptr>
   constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
@@ -936,6 +1015,8 @@ public:
     return monostate{};
   }
 
+  /// \group map_rval
+  /// \synopsis template <class F> auto map(F &&f) const &&;
   template <class F, detail::disable_if_optional<F> * = nullptr,
             detail::disable_if_ret_void<F, T const &&> * = nullptr>
   constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
@@ -973,6 +1054,11 @@ public:
     return monostate{};
   }
 
+  /// \group or_else
+  /// \brief Calls `f` if the optional is empty
+  /// \synopsis template <class F> optional<T> or_else (F &&f) &;
+  /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
+  /// \effects If `*this` has a value, returns `*this`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
     if (has_value())
@@ -987,6 +1073,11 @@ public:
     return has_value() ? *this : std::forward<F>(f)();
   }
 
+  /// \group or_else_rval
+  /// \brief Calls `f` if the optional is empty
+  /// \synopsis template <class F> optional<T> or_else (F &&f) &&;
+  /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
+  /// \effects If `*this` has a value, returns `std::move(*this)`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> or_else(F &&f) && {
     if (has_value())
@@ -1001,6 +1092,8 @@ public:
     return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
 
+  /// \group or_else
+  /// \synopsis template <class F> optional<T> or_else (F &&f) const &;
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> or_else(F &&f) const & {
     if (has_value())
@@ -1015,6 +1108,8 @@ public:
     return has_value() ? *this : std::forward<F>(f)();
   }
 
+  /// \group or_else_rval
+  /// \synopsis template <class F> optional<T> or_else (F &&f) const &&;
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> or_else(F &&f) const && {
     if (has_value())
