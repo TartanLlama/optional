@@ -1,6 +1,8 @@
 # optional
 Work in progress implementation of std::optional with extensions
 
+Documentation at [optional.tartanllama.xyz](optional.tartanllama.xyz)
+
 Clang + GCC: [![Linux Build Status](https://travis-ci.org/TartanLlama/monadic-optional.png?branch=master)](https://travis-ci.org/TartanLlama/monadic-optional)
 MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/mjorfcw3akhknnio?svg=true)](https://ci.appveyor.com/project/TartanLlama/monadic-optional)
 
