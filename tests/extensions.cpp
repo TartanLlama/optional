@@ -374,18 +374,18 @@ SECTION("conjunction") {
 
 SECTION("map_or") {
     tl::optional<int> o1 = 21;
-    REQUIRE((o1.map_or([](auto x) { return x * 2; }, 13)) == 42);
+    REQUIRE((o1.map_or([](int x) { return x * 2; }, 13)) == 42);
 
     tl::optional<int> o2;
-    REQUIRE((o2.map_or([](auto x) { return x * 2; }, 13)) == 13);
+    REQUIRE((o2.map_or([](int x) { return x * 2; }, 13)) == 13);
 }
 
 SECTION("map_or_else") {
     tl::optional<int> o1 = 21;
-    REQUIRE((o1.map_or_else([](auto x) { return x * 2; }, []{return 13;})) == 42);
+    REQUIRE((o1.map_or_else([](int x) { return x * 2; }, []{return 13;})) == 42);
 
     tl::optional<int> o2;
-    REQUIRE((o2.map_or_else([](auto x) { return x * 2; }, []{return 13;})) == 13);
+    REQUIRE((o2.map_or_else([](int x) { return x * 2; }, []{return 13;})) == 13);
 }
 
 SECTION("take") {

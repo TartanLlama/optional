@@ -25,6 +25,10 @@
 #define TL_OPTIONAL_GCC49
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#define TL_OPTIONAL_NO_CONSTRR
+#endif
+
 #if __cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) || defined(TL_OPTIONAL_GCC49)
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
@@ -370,6 +374,7 @@ public:
                        : result(nullopt);
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
   template <class F>
@@ -381,6 +386,7 @@ public:
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : result(nullopt);
   }
+  #endif
 
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), value())` and is returned.
@@ -513,6 +519,7 @@ public:
     return monostate{};
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const &&;
   template <class F, detail::disable_if_optional<F> * = nullptr,
@@ -554,6 +561,7 @@ public:
     detail::invoke(*std::forward<F>(f), std::move(**this));
     return monostate{};
   }
+  #endif
 
   /// \brief Calls `f` if the optional is empty
   /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
@@ -609,6 +617,7 @@ public:
     return has_value() ? *this : std::forward<F>(f)();
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> or_else(F &&f) const && {
@@ -624,7 +633,7 @@ public:
   optional<T> or_else(F &&f) const && {
     return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
-
+  #endif
 
   /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
   /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
@@ -647,11 +656,13 @@ public:
                        : std::forward<U>(u);
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map_or
   template <class F, class U> U map_or(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u);
   }
+  #endif
 
   /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
   /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
@@ -680,6 +691,7 @@ public:
                        : std::forward<U>(u)();
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map_or_else
   /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &&;
   template <class F, class U>
@@ -687,6 +699,7 @@ public:
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u)();
   }
+  #endif
 
   /// \returns `u` if `*this` has a value, otherwise an empty optional.
   template <class U>
@@ -711,10 +724,12 @@ public:
     return has_value() ? std::move(*this) : rhs;
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group disjunction
   constexpr optional disjunction (const optional &rhs) const && {
     return has_value() ? std::move(*this) : rhs;
   }
+  #endif
 
   /// \group disjunction
   TL_OPTIONAL_11_CONSTEXPR optional disjunction (optional &&rhs) & {
@@ -731,10 +746,12 @@ public:
     return has_value() ? std::move(*this) : std::move(rhs);
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group disjunction
   constexpr optional disjunction (optional &&rhs) const && {
     return has_value() ? std::move(*this) : std::move(rhs);
   }
+  #endif
 
   /// Takes the value out of the optional, leaving it empty
   /// \group take
@@ -758,12 +775,14 @@ public:
     return ret;
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group take
   optional take() const && {
     optional ret = std::move(*this);
     reset();
     return ret;
   }
+  #endif
 
   using value_type = T;
 
@@ -1070,8 +1089,10 @@ public:
     return std::move(this->m_value);
   }
 
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
   constexpr const T &&operator*() const && { return std::move(this->m_value); }
+  #endif
 
   /// \returns whether or not the optional has a value
   /// \group has_value
@@ -1103,12 +1124,15 @@ public:
       return std::move(this->m_value);
     throw bad_optional_access();
   }
+
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
   constexpr const T &&value() const && {
     if (has_value())
       return std::move(this->m_value);
     throw bad_optional_access();
   }
+  #endif
 
   /// \returns the stored value if there is one, otherwise returns `u`
   /// \group value_or

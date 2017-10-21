@@ -22,8 +22,11 @@ TEST_CASE("Observers", "[observers]") {
   REQUIRE(success);
   success = std::is_same<decltype(std::move(o1).value()), int &&>::value;
   REQUIRE(success);
+
+  #ifndef TL_OPTIONAL_NO_CONSTRR
   success = std::is_same<decltype(std::move(o3).value()), const int &&>::value;
   REQUIRE(success);
+  #endif
 
   tl::optional<move_detector> o4{tl::in_place};
   move_detector o5 = std::move(o4).value();
