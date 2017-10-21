@@ -33,6 +33,16 @@ matrix:
       addons:
         apt:
           sources:
+             - llvm-toolchain-precise-3.5
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-3.5
+             - libc++-dev
+      env: COMPILER=clang++-3.5
+    - compiler: clang
+      addons:
+        apt:
+          sources:
              - llvm-toolchain-precise-3.6
              - ubuntu-toolchain-r-test
           packages:

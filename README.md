@@ -75,6 +75,7 @@ Tested on:
   * clang 3.8
   * clang 3.7
   * clang 3.6
+  * clang 3.5
   * g++ 5.0
   * g++ 4.9
   * g++ 4.8
