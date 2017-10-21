@@ -65,7 +65,7 @@ matrix:
           sources:
             - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
               key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
-             - ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r-test
           packages:
             - clang++-3.9
             - libc++-dev
