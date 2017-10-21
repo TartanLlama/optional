@@ -70,13 +70,24 @@ The interface is the same as `std::optional`, but the following member functions
 
 Tested on:
 
-- clang 3.9
-- clang 3.8
-- g++ 7.2
-- g++ 5.4
-- g++ 4.8.5
-- MSVC 2015
-- MSVC 2017
+- Travis continuous integration
+  * clang 3.9
+  * clang 3.8
+  * clang 3.7
+  * clang 3.6
+  * g++ 5.0
+- Appveyor continuous integration
+  * MSVC 2015
+  * MSVC 2017
+- Manual
+  * g++ 7.2
+  * g++ 5.4
+
+Unsupported, but planning to support:
+
+- g++ 4.9
+- g++ 4.8
+
 
 ### Dependencies
 
