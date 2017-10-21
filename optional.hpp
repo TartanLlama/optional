@@ -17,7 +17,7 @@
 #include <type_traits>
 #include <utility>
 
-#if __cplusplus == 201103L || _MSC_VER == 1900
+#if __cplusplus == 201103L || (defined(_MSC_VER) && _MSC_VER == 1900)
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
@@ -25,7 +25,7 @@
 #define TL_OPTIONAL_11_CONSTEXPR constexpr
 #endif
 
-#if _MSC_VER == 1900
+#if defined(_MSC_VER) && _MSC_VER == 1900
 /// \exclude
 #define TL_OPTIONAL_MSVC_2015_CONSTEXPR
 #else
@@ -798,7 +798,7 @@ public:
   constexpr optional() noexcept = default;
 
   /// \group ctor_empty
-  constexpr optional(nullopt_t) noexcept {};
+  constexpr optional(nullopt_t) noexcept {}
 
   /// Copy constructor
   ///
