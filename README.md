@@ -77,3 +77,8 @@ Tested on:
 - g++ 4.8.5
 - MSVC 2015
 - MSVC 2017
+
+### Dependencies
+
+Requires [Standardese](https://github.com/foonathan/standardese) for generating documentation.
+Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bundled in the test directory.
