@@ -424,28 +424,24 @@ public:
     <a href='doc_optional.md#tl::optional-T-'>optional&lt;T&gt;</a> <a href='doc_optional.md#tl::optional-T-::or_else(F&&)&&'>or_else</a>(F&amp;&amp; f) const &amp;&amp;;
     
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
     
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
     
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+    template &lt;class F, class U&gt;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
     
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
-    
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
-    
-    template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
-    
-    template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
-    
-    template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
+    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
 };</code></pre>
 
 An optional object is an object that contains the storage for another object and manages the lifetime of this contained object, if any. The contained object may be initialized after the optional object has been initialized, and may be destroyed before the optional object has been destroyed. The initialization state of the contained object is tracked by the optional object.
@@ -549,6 +545,54 @@ Calls `f` if the optional is empty
 *Requires*: `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
 
 *Effects*: If `*this` has a value, returns `std::move(*this)`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
+
+### Function template `tl::optional::map_or`<a id="tl::optional-T-::map_or(F&&,U&&)&"></a>
+
+<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+
+(2)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) const &amp;;</code></pre>
+
+Maps the stored value with `f` if there is one, otherwise returns `u`
+
+If there is a value stored, then `f` is called with `**this` and the value is returned. Otherwise `u` is returned.
+
+### Function template `tl::optional::map_or`<a id="tl::optional-T-::map_or(F&&,U&&)&&"></a>
+
+<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+
+(2)  template &lt;class F, class U&gt;
+     U map_or(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;</code></pre>
+
+Maps the stored value with `f` if there is one, otherwise returns `u`
+
+If there is a value stored, then `f` is called with `std::move(**this)` and the value is returned. Otherwise `u` is returned.
+
+### Function template `tl::optional::map_or_else`<a id="tl::optional-T-::map_or_else(F&&,U&&)&"></a>
+
+<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+
+(2)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) const &amp;;</code></pre>
+
+Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
+
+If there is a value stored, then `f` is called with `**this` and the value is returned. Otherwise `std::forward<U>(u)()` is returned.
+
+### Function template `tl::optional::map_or_else`<a id="tl::optional-T-::map_or_else(F&&,U&&)&&"></a>
+
+<pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+
+(2)  template &lt;class F, class U&gt;
+     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;</code></pre>
+
+Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
+
+If there is a value stored, then `f` is called with `std::move(**this)` and the value is returned. Otherwise `std::forward<U>(u)()` is returned.
 
 -----
 

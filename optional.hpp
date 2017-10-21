@@ -1124,41 +1124,62 @@ public:
     return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
 
+
+  /// \group map_or
+  /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
+  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
+  /// Otherwise `u` is returned.
   template <class F, class U> U map_or(F &&f, U &&u) & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u);
   }
 
+  /// \group map_or_val
+  /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
+  /// \details If there is a value stored, then `f` is called with `std::move(**this)` and the value is returned.
+  /// Otherwise `u` is returned.
   template <class F, class U> U map_or(F &&f, U &&u) && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u);
   }
 
+  /// \group map_or
   template <class F, class U> U map_or(F &&f, U &&u) const & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u);
   }
 
+  /// \group map_or_val
   template <class F, class U> U map_or(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u);
   }
 
+  /// \group map_or_else
+  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
+  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
+  /// Otherwise `std::forward<U>(u)()` is returned.
   template <class F, class U> U map_or_else(F &&f, U &&u) & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u)();
   }
 
+  /// \group map_or_else_rval
+  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
+  /// \details If there is a value stored, then `f` is called with `std::move(**this)` and the value is returned.
+  /// Otherwise `std::forward<U>(u)()` is returned.
   template <class F, class U> U map_or_else(F &&f, U &&u) && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u)();
   }
 
+  /// \group map_or_else
   template <class F, class U> U map_or_else(F &&f, U &&u) const & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u)();
   }
 
+  /// \group map_or_else_rval
   template <class F, class U> U map_or_else(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u)();
