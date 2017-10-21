@@ -3,26 +3,21 @@ language: cpp
 dist: trusty
 sudo: false
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - cmake-data
-      - cmake
-      - libc++-dev
-
 matrix:
   include:
     - compiler: gcc
       addons:
         apt:
+          sources:
+             - ubuntu-toolchain-r-test
           packages:
              - g++-5
       env: COMPILER=g++-5
     - compiler: gcc
       addons:
         apt:
+          sources:
+             - ubuntu-toolchain-r-test
           packages:
              - g++-4.9
       env: COMPILER=g++-4.9
@@ -31,24 +26,30 @@ matrix:
         apt:
           sources:
              - llvm-toolchain-precise-3.6
+             - ubuntu-toolchain-r-test
           packages:
              - clang++-3.6
+             - libc++-dev
       env: COMPILER=clang++-3.6
     - compiler: clang
       addons:
         apt:
           sources:
              - llvm-toolchain-precise-3.7
+             - ubuntu-toolchain-r-test
           packages:
              - clang++-3.7
+             - libc++-dev
       env: COMPILER=clang++-3.7
     - compiler: clang
       addons:
         apt:
           sources:
              - llvm-toolchain-precise-3.8
+             - ubuntu-toolchain-r-test
           packages:
              - clang++-3.8
+             - libc++-dev
       env: COMPILER=clang++-3.8
     - compiler: clang
       addons:
@@ -56,8 +57,10 @@ matrix:
           sources:
             - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
               key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
+             - ubuntu-toolchain-r-test
           packages:
             - clang++-3.9
+            - libc++-dev
       env: COMPILER=clang++-3.9
 
 
