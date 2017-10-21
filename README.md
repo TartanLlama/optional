@@ -1,5 +1,5 @@
 # optional
-Single header, Work-in-progress implementation of std::optional with functional-style extensions.
+Single header, work-in-progress implementation of `std::optional` with functional-style extensions.
 
 Clang + GCC: [![Linux Build Status](https://travis-ci.org/TartanLlama/optional.png?branch=master)](https://travis-ci.org/TartanLlama/optional)
 MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/k5x00xa11y3s5wsg?svg=true)](https://ci.appveyor.com/project/TartanLlama/optional)
