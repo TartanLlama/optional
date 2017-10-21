@@ -34,7 +34,7 @@
 #endif
 
 namespace tl {
-/// \brief Represents an optional with no data; essentially a bool
+/// \brief Used to represent an optional with no data; essentially a bool
 class monostate {};
 
 /// \brief A tag type to tell optional to construct its value in-place
@@ -281,6 +281,50 @@ struct is_nothrow_swappable
 };
 #endif
 
+
+template <class T, bool = ::std::is_trivially_destructible<T>::value>
+struct optional_storage_base {
+    TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
+
+  template <class... U>
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
+      : m_value(std::forward<U>(u)...), m_has_value(true) {}
+
+  ~optional_storage_base() {
+    if (m_has_value) {
+      m_value.~T();
+      m_has_value = false;
+    }
+  }
+
+  struct dummy {};
+  union {
+    dummy m_dummy;
+    T m_value;
+  };
+
+  bool m_has_value;
+};
+
+template <class T> struct optional_storage_base<T, true> {
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept
+      : m_dummy(), m_has_value(false) {}
+
+  template <class... U>
+  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t,
+                                                        U &&... u) noexcept
+      : m_value(std::forward<U>(u)...), m_has_value(true) {}
+
+  ~optional_storage_base() = default;
+
+  struct dummy {};
+  union {
+    dummy m_dummy;
+    T m_value;
+  };
+
+  bool m_has_value = false;
+};
 } // namespace detail
 
 /// \brief A tag type to represent an empty optional
@@ -304,6 +348,722 @@ class bad_optional_access : public std::exception {
 public:
   bad_optional_access() = default;
   const char *what() const noexcept { return "Optional has no value"; }
+};
+
+/// An optional object is an object that contains the storage for another object and manages the lifetime of this contained object, if any. The contained object may be initialized after the optional object has been initialized, and may be destroyed before the optional object has been destroyed. The initialization state of the contained object is tracked by the optional object.
+template <class T> class optional : private detail::optional_storage_base<T> {
+  using base = detail::optional_storage_base<T>;
+
+public:
+
+  /// \group and_then
+  /// Carries out some operation which returns an optional on the stored object if there is one.
+  /// \requires `std::invoke(std::forward<F>(f), value())` returns a `std::optional<U>` for some `U`.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
+  /// \group and_then
+  /// \synopsis template <class F> constexpr auto and_then(F &&f);
+  template <class F>
+  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) & {
+    using result = detail::invoke_result_t<F, T>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F>
+  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) && {
+    using result = detail::invoke_result_t<F, T>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(nullopt);
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F> constexpr auto and_then(F &&f) const;
+  template <class F>
+  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const & {
+    using result = detail::invoke_result_t<F, T>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F>
+  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const && {
+    using result = detail::invoke_result_t<F, T>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(nullopt);
+  }
+
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), value())` and is returned.
+  /// \group map
+  /// \synopsis template <class F> auto map(F &&f);
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T &> * = nullptr>
+      detail::get_map_return<F, T &> map(F &&f) &
+      noexcept(noexcept(detail::invoke(std::forward<F>(f),
+                                       std::declval<T &>()))) {
+    using result = detail::get_map_return<F, T &>;
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T &> * = nullptr>
+  detail::get_map_return<F, T &> map(F &&f) & {
+    if (!has_value())
+      return nullopt;
+
+    detail::invoke(std::forward<F>(f), **this);
+    return monostate{};
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T &> * = nullptr>
+  detail::get_map_return<F, T &> map(F &&f) & {
+    using result = detail::get_map_return<F, T &>;
+    return (f.has_value() && has_value())
+               ? detail::invoke(*std::forward<F>(f), **this)
+               : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T &> * = nullptr>
+  detail::get_map_return<F, T &> map(F &&f) & {
+    if (!f.has_value() || !has_value())
+      return nullopt;
+
+    detail::invoke(*std::forward<F>(f), **this);
+    return monostate{};
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T &&> * = nullptr>
+  detail::get_map_return<F, T &&> map(F &&f) && {
+    using result = detail::get_map_return<F, T &&>;
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T &&> * = nullptr>
+  detail::get_map_return<F, T &&> map(F &&f) && {
+    if (!has_value())
+      return nullopt;
+
+    detail::invoke(std::forward<F>(f), std::move(**this));
+    return monostate{};
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T &&> * = nullptr>
+  detail::get_map_return<F, T &&> map(F &&f) && {
+    using result = detail::get_map_return<F, T &&>;
+    return (f.has_value() && has_value())
+               ? detail::invoke(*std::forward<F>(f), std::move(**this))
+               : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T &&> * = nullptr>
+  detail::get_map_return<F, T &&> map(F &&f) && {
+    if (!f.has_value() || !has_value())
+      return nullopt;
+
+    detail::invoke(*std::forward<F>(f), std::move(**this));
+    return monostate{};
+  }
+
+  /// \group map
+  /// \synopsis template <class F> auto map(F &&f) const;
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T const &> * = nullptr>
+  constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
+    using result = detail::get_map_return<F, T const &>;
+    return this->has_value()
+               ? result(detail::invoke(std::forward<F>(f), **this))
+               : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T const &> * = nullptr>
+  detail::get_map_return<F, T const &> map(F &&f) const & {
+    if (!has_value())
+      return nullopt;
+
+    detail::invoke(std::forward<F>(f), **this);
+    return monostate{};
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T const &> * = nullptr>
+  constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
+    using result = detail::get_map_return<F, const T &>;
+    return (f.has_value() && has_value())
+               ? detail::invoke(*std::forward<F>(f), **this)
+               : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T const &> * = nullptr>
+  detail::get_map_return<F, T const &> map(F &&f) const & {
+    if (!f.has_value() || !has_value())
+      return nullopt;
+
+    detail::invoke(*std::forward<F>(f), **this);
+    return monostate{};
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T const &&> * = nullptr>
+  constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
+    using result = detail::get_map_return<F, const T &&>;
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T const &&> * = nullptr>
+  detail::get_map_return<F, T const &&> map(F &&f) const && {
+    if (!has_value())
+      return nullopt;
+
+    detail::invoke(std::forward<F>(f), std::move(**this));
+    return monostate{};
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::disable_if_ret_void<F, T const &&> * = nullptr>
+  constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
+    using result = detail::get_map_return<F, const T &&>;
+    return (f.has_value() && has_value())
+               ? detail::invoke(*std::forward<F>(f), std::move(**this))
+               : result(nullopt);
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_optional<F> * = nullptr,
+            detail::enable_if_ret_void<F, T const &&> * = nullptr>
+  detail::get_map_return<F, T &> map(F &&f) const && {
+    if (!f.has_value() || !has_value())
+      return nullopt;
+
+    detail::invoke(*std::forward<F>(f), std::move(**this));
+    return monostate{};
+  }
+
+  /// \brief Calls `f` if the optional is empty
+  /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
+  /// \effects If `*this` has a value, returns `*this`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
+  /// \group or_else
+  /// \synopsis template <class F> optional<T> or_else (F &&f);
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
+    if (has_value())
+      return *this;
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
+    return has_value() ? *this : std::forward<F>(f)();
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) && {
+    if (has_value())
+      return std::move(*this);
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) && {
+    return has_value() ? std::move(*this) : std::forward<F>(f)();
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) const & {
+    if (has_value())
+      return *this;
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  /// \group or_else
+  /// \synopsis template <class F> optional<T> or_else (F &&f) const;
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) const & {
+    return has_value() ? *this : std::forward<F>(f)();
+  }
+
+  /// \exclude
+  template <class F, detail::enable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) const && {
+    if (has_value())
+      return std::move(*this);
+
+    std::forward<F>(f)();
+    return nullopt;
+  }
+
+  /// \exclude
+  template <class F, detail::disable_if_ret_void<F> * = nullptr>
+  optional<T> or_else(F &&f) const && {
+    return has_value() ? std::move(*this) : std::forward<F>(f)();
+  }
+
+
+  /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
+  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
+  /// Otherwise `u` is returned.
+  /// \group map_or
+  /// \synopsis template <class F, class U> U map_or(F &&f, U &&u);
+  template <class F, class U> U map_or(F &&f, U &&u) & {
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : std::forward<U>(u);
+  }
+
+  /// \exclude
+  template <class F, class U> U map_or(F &&f, U &&u) && {
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : std::forward<U>(u);
+  }
+
+  /// \group map_or
+  /// \synopsis template <class F, class U> U map_or(F &&f, U &&u) const;
+  template <class F, class U> U map_or(F &&f, U &&u) const & {
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : std::forward<U>(u);
+  }
+
+  /// \exclude
+  template <class F, class U> U map_or(F &&f, U &&u) const && {
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : std::forward<U>(u);
+  }
+
+  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
+  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
+  /// Otherwise `std::forward<U>(u)()` is returned.
+  /// \synopsis template <class F, class U> U map_or_else(F &&f, U &&u);
+  /// \group map_or_else
+  template <class F, class U> U map_or_else(F &&f, U &&u) & {
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : std::forward<U>(u)();
+  }
+
+  /// \exclude
+  template <class F, class U> U map_or_else(F &&f, U &&u) && {
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : std::forward<U>(u)();
+  }
+
+  /// \group map_or_else
+  /// \synopsis template <class F, class U> U map_or_else(F &&f, U &&u) const;
+  template <class F, class U> U map_or_else(F &&f, U &&u) const & {
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : std::forward<U>(u)();
+  }
+
+  /// \exclude
+  template <class F, class U> U map_or_else(F &&f, U &&u) const && {
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : std::forward<U>(u)();
+  }
+
+  using value_type = T;
+
+  /// Constructs an optional that does not contain a value.
+  /// \group ctor_empty
+  constexpr optional() noexcept = default;
+
+  /// \group ctor_empty
+  constexpr optional(nullopt_t) noexcept {};
+
+  /// Copy constructor
+  ///
+  /// If `rhs` contains a value, the stored value is direct-initialized with it.
+  /// Otherwise, the constructed optional is empty.
+  TL_OPTIONAL_11_CONSTEXPR optional(const optional &rhs) {
+    if (rhs.has_value()) {
+      this->m_has_value = true;
+      new (std::addressof(this->m_value)) T(*rhs);
+    }
+  }
+
+  // TODO conditionally disable
+  /// Move constructor
+  ///
+  /// If `rhs` contains a value, the stored value is direct-initialized with it.
+  /// Otherwise, the constructed optional is empty.
+  TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) noexcept(
+      std::is_nothrow_move_constructible<T>::value) {
+    if (rhs.has_value()) {
+      this->m_has_value = true;
+      new (std::addressof(this->m_value)) T(std::move(*rhs));
+    }
+  }
+
+
+  /// Constructs the stored value in-place using the given arguments.
+  /// \group in_place
+  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t, Args&&... args);
+  template <class... Args>
+  constexpr explicit optional(
+      detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
+      Args &&... args)
+      : base(in_place, std::forward<Args>(args)...) {}
+
+  /// \group in_place
+  /// \synopsis template <class U, class... Args>\nconstexpr explicit optional(in_place_t, std::initializer_list<U>&, Args&&... args);
+  template <class U, class... Args>
+  TL_OPTIONAL_11_CONSTEXPR explicit optional(
+      detail::enable_if_t<std::is_constructible<T, std::initializer_list<U> &,
+                                                Args &&...>::value,
+                          in_place_t>,
+      std::initializer_list<U> il, Args &&... args) {
+    this->m_has_value = true;
+    new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
+  }
+
+  /// Constructs the stored value with `u`.
+  /// \synopsis template <class U=T> constexpr optional(U &&u);
+  template <
+      class U = T,
+      detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr,
+      detail::enable_forward_value<T, U> * = nullptr>
+  constexpr optional(U &&u) : base(in_place, std::forward<U>(u)) {}
+
+  /// \exclude
+  template <
+      class U = T,
+      detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr,
+      detail::enable_forward_value<T, U> * = nullptr>
+  constexpr explicit optional(U &&u) : base(in_place, std::forward<U>(u)) {}
+
+  /// Converting copy constructor.
+  /// \synopsis template <class U> optional(const optional<U> &rhs);
+  template <
+      class U, detail::enable_from_other<T, U, const U &> * = nullptr,
+      detail::enable_if_t<std::is_convertible<const U &, T>::value> * = nullptr>
+  optional(const optional<U> &rhs) {
+    this->m_has_value = true;
+    new (std::addressof(this->m_value)) T(*rhs);
+  }
+
+  /// \exclude
+  template <class U, detail::enable_from_other<T, U, const U &> * = nullptr,
+            detail::enable_if_t<!std::is_convertible<const U &, T>::value> * =
+                nullptr>
+  explicit optional(const optional<U> &rhs) {
+    this->m_has_value = true;
+    new (std::addressof(this->m_value)) T(*rhs);
+  }
+
+  /// Converting move constructor.
+  /// \synopsis template <class U> optional(optional<U> &&rhs);
+  template <
+      class U, detail::enable_from_other<T, U, U &&> * = nullptr,
+      detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr>
+  optional(optional<U> &&rhs) {
+    this->m_has_value = true;
+    new (std::addressof(this->m_value)) T(std::move(*rhs));
+  }
+
+  /// \exclude
+  template <
+      class U, detail::enable_from_other<T, U, U &&> * = nullptr,
+      detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr>
+  explicit optional(optional<U> &&rhs) {
+    this->m_has_value = true;
+    new (std::addressof(this->m_value)) T(std::move(*rhs));
+  }
+
+  /// Destructor.
+  ~optional() = default;
+
+  /// Assignment to empty.
+  ///
+  /// Destroys the current value if there is one.
+  optional &operator=(nullopt_t) noexcept {
+    if (has_value()) {
+      this->m_value.~T();
+      this->m_has_value = false;
+    }
+  }
+
+  // TODO conditionally delete, check exception guarantee
+  /// Copy assignment.
+  ///
+  /// Copies the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
+  optional &operator=(const optional &rhs) {
+    if (has_value()) {
+      if (rhs.has_value()) {
+        this->m_value = rhs.m_value;
+      } else {
+        this->m_value.~T();
+        this->m_has_value = false;
+      }
+    }
+
+    if (rhs.has_value()) {
+      new (std::addressof(this->m_value)) T(rhs.m_value);
+      this->m_has_value = true;
+    }
+  }
+
+  // TODO conditionally delete, check exception guarantee
+  /// Move assignment.
+  ///
+  /// Moves the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
+  optional &operator=(optional &&rhs) noexcept(
+      std::is_nothrow_move_assignable<T>::value
+          &&std::is_nothrow_move_constructible<T>::value) {
+    if (has_value()) {
+      if (rhs.has_value()) {
+        this->m_value = std::move(rhs.m_value);
+      } else {
+        this->m_value.~T();
+        this->m_has_value = false;
+      }
+    }
+
+    if (rhs.has_value()) {
+      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
+      this->m_has_value = true;
+    }
+  }
+
+  // TODO conditionally delete, check exception guarantee
+  /// Assigns the stored value from `u`, destroying the old value if there was one.
+  /// \synopsis optional &operator=(U &&u);
+  template <class U = T, detail::enable_assign_forward<T, U> * = nullptr>
+  optional &operator=(U &&u) {
+    if (has_value()) {
+      this->m_value = std::forward<U>(u);
+    } else {
+      new (std::addressof(this->m_value)) T(std::forward<U>(u));
+      this->m_has_value = true;
+    }
+  }
+
+  // TODO check exception guarantee
+  /// Converting copy assignment operator.
+  ///
+  /// Copies the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
+  /// \synopsis optional &operator=(const optional<U> & rhs);
+  template <class U,
+            detail::enable_assign_from_other<T, U, const U &> * = nullptr>
+  optional &operator=(const optional<U> &rhs) {
+    if (has_value()) {
+      if (rhs.has_value()) {
+        this->m_value = rhs.m_value;
+      } else {
+        this->m_value.~T();
+        this->m_has_value = false;
+      }
+    }
+
+    if (rhs.has_value()) {
+      new (std::addressof(this->m_value)) T(rhs.m_value);
+      this->m_has_value = true;
+    }
+  }
+
+  // TODO check exception guarantee
+  /// Converting move assignment operator.
+  ///
+  /// Moves the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
+  /// \synopsis optional &operator=(optional<U> && rhs);
+  template <class U, detail::enable_assign_from_other<T, U, U> * = nullptr>
+  optional &operator=(optional<U> &&rhs) {
+    if (has_value()) {
+      if (rhs.has_value()) {
+        this->m_value = std::move(rhs.m_value);
+      } else {
+        this->m_value.~T();
+        this->m_has_value = false;
+      }
+    }
+
+    if (rhs.has_value()) {
+      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
+      this->m_has_value = true;
+    }
+  }
+
+  /// Constructs the value in-place, destroying the current one if there is one.
+  /// \group emplace
+  template <class... Args> T &emplace(Args &&... args) {
+    static_assert(std::is_constructible<T, Args &&...>::value,
+                  "T must be constructible with Args");
+
+    *this = nullopt;
+    new (std::addressof(this->m_value)) T(std::forward<Args>(args)...);
+  }
+
+  /// \group emplace
+  /// \synopsis template <class U, class... Args>\nT& emplace(std::initializer_list<U> il, Args &&... args);
+  template <class U, class... Args>
+  detail::enable_if_t<
+      std::is_constructible<T, std::initializer_list<U> &, Args &&...>::value,
+      T &>
+  emplace(std::initializer_list<U> il, Args &&... args) {
+    *this = nullopt;
+    new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
+  }
+
+  /// Swaps this optional with the other.
+  ///
+  /// If neither optionals have a value, nothing happens.
+  /// If both have a value, the values are swapped.
+  /// If one has a value, it is moved to the other and the movee is left valueless.
+  void
+  swap(optional &rhs) noexcept(std::is_nothrow_move_constructible<T>::value
+                                   &&detail::is_nothrow_swappable<T>::value) {
+    if (has_value()) {
+      if (rhs.has_value()) {
+        using std::swap;
+        swap(**this, *rhs);
+      } else {
+        new (&rhs.m_value) T(std::move(this->m_value));
+        this->m_value.T::~T();
+      }
+    } else if (rhs.has_value()) {
+      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
+      rhs.m_value.T::~T();
+    }
+  }
+
+  /// \returns a pointer to the stored value
+  /// \requires a value is stored
+  /// \group pointer
+  /// \synopsis constexpr const T *operator->() const;
+  constexpr const T *operator->() const {
+    return std::addressof(this->m_value);
+  }
+
+  /// \group pointer
+  /// \synopsis constexpr T *operator->();
+  TL_OPTIONAL_11_CONSTEXPR T *operator->() {
+    return std::addressof(this->m_value);
+  }
+
+  /// \returns the stored value
+  /// \requires a value is stored
+  /// \group deref
+  /// \synopsis constexpr T &operator*();
+  TL_OPTIONAL_11_CONSTEXPR T &operator*() & { return this->m_value; }
+
+  /// \group deref
+  /// \synopsis constexpr const T &operator*() const;
+  constexpr const T &operator*() const & { return this->m_value; }
+
+  /// \exclude
+  TL_OPTIONAL_11_CONSTEXPR T &&operator*() && {
+    return std::move(this->m_value);
+  }
+
+  /// \exclude
+  constexpr const T &&operator*() const && { return std::move(this->m_value); }
+
+  /// \returns whether or not the optional has a value
+  /// \group has_value
+  constexpr bool has_value() const noexcept { return this->m_has_value; }
+
+  /// \group has_value
+  constexpr explicit operator bool() const noexcept {
+    return this->m_has_value;
+  }
+
+  /// \returns the contained value if there is one, otherwise throws [bad_optional_access]
+  /// \group value
+  /// \synopsis constexpr T &value();
+  TL_OPTIONAL_11_CONSTEXPR T &value() & {
+    if (has_value())
+      return this->m_value;
+    throw bad_optional_access();
+  }
+  /// \group value
+  /// \synopsis constexpr const T &value() const;
+  TL_OPTIONAL_11_CONSTEXPR const T &value() const & {
+    if (has_value())
+      return this->m_value;
+    throw bad_optional_access();
+  }
+  /// \exclude
+  TL_OPTIONAL_11_CONSTEXPR T &&value() && {
+    if (has_value())
+      return std::move(this->m_value);
+    throw bad_optional_access();
+  }
+  /// \exclude
+  constexpr const T &&value() const && {
+    if (has_value())
+      return std::move(this->m_value);
+    throw bad_optional_access();
+  }
+
+  /// \returns the stored value if there is one, otherwise returns `u`
+  /// \group value_or
+  template <class U> constexpr T value_or(U &&u) const & {
+    static_assert(std::is_copy_constructible<T>::value &&
+                      std::is_convertible<U &&, T>::value,
+                  "T must be copy constructible and convertible from U");
+    return has_value() ? **this : static_cast<T>(std::forward<U>(u));
+  }
+
+  /// \group value_or
+  template <class U> constexpr T value_or(U &&u) && {
+    static_assert(std::is_move_constructible<T>::value &&
+                      std::is_convertible<U &&, T>::value,
+                  "T must be move constructible and convertible from U");
+    return has_value() ? **this : static_cast<T>(std::forward<U>(u));
+  }
+
+  /// Destroys the stored value if one exists, making the optional empty
+  void reset() noexcept {
+    if (has_value()) {
+      this->m_value.~T();
+      this->m_has_value = false;
+    }
+  }
+
+
 };
 
 /// \group relop
@@ -499,6 +1259,8 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
                                            Args &&... args) {
   return optional<T>(in_place, il, std::forward<Args>(args)...);
 }
+
+// template <class T> optional(T)->optional<T>;
 } // namespace tl
 
 namespace std {
@@ -512,679 +1274,3 @@ template <class T> struct hash<tl::optional<T>> {
   }
 };
 } // namespace std
-
-namespace tl {
-/// \exclude
-namespace detail {
-template <class T, bool = ::std::is_trivially_destructible<T>::value>
-struct optional_storage_base {
-    TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
-
-  template <class... U>
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
-      : m_value(std::forward<U>(u)...), m_has_value(true) {}
-
-  ~optional_storage_base() {
-    if (m_has_value) {
-      m_value.~T();
-      m_has_value = false;
-    }
-  }
-
-  struct dummy {};
-  union {
-    dummy m_dummy;
-    T m_value;
-  };
-
-  bool m_has_value;
-};
-
-template <class T> struct optional_storage_base<T, true> {
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept
-      : m_dummy(), m_has_value(false) {}
-
-  template <class... U>
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t,
-                                                        U &&... u) noexcept
-      : m_value(std::forward<U>(u)...), m_has_value(true) {}
-
-  ~optional_storage_base() = default;
-
-  struct dummy {};
-  union {
-    dummy m_dummy;
-    T m_value;
-  };
-
-  bool m_has_value = false;
-};
-} // namespace detail
-
-
-/// An optional object is an object that contains the storage for another object and manages the lifetime of this contained object, if any. The contained object may be initialized after the optional object has been initialized, and may be destroyed before the optional object has been destroyed. The initialization state of the contained object is tracked by the optional object.
-template <class T> class optional : private detail::optional_storage_base<T> {
-  using base = detail::optional_storage_base<T>;
-
-public:
-  using value_type = T;
-
-  /// Constructs an optional that does not contain a value.
-  constexpr optional() noexcept = default;
-
-  /// Constructs an optional that does not contain a value.
-  constexpr optional(nullopt_t) noexcept {};
-
-  /// Copy constructor
-  ///
-  /// If `rhs` contains a value, the stored value is direct-initialized with it.
-  /// Otherwise, the constructed optional is empty.
-  TL_OPTIONAL_11_CONSTEXPR optional(const optional &rhs) {
-    if (rhs.has_value()) {
-      this->m_has_value = true;
-      new (std::addressof(this->m_value)) T(*rhs);
-    }
-  }
-
-  // TODO conditionally disable
-  /// Move constructor
-  ///
-  /// If `rhs` contains a value, the stored value is direct-initialized with it.
-  /// Otherwise, the constructed optional is empty.
-  TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value) {
-    if (rhs.has_value()) {
-      this->m_has_value = true;
-      new (std::addressof(this->m_value)) T(std::move(*rhs));
-    }
-  }
-  template <class... Args>
-  constexpr explicit optional(
-      detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
-      Args &&... args)
-      : base(in_place, std::forward<Args>(args)...) {}
-  template <class U, class... Args>
-  TL_OPTIONAL_11_CONSTEXPR explicit optional(
-      detail::enable_if_t<std::is_constructible<T, std::initializer_list<U> &,
-                                                Args &&...>::value,
-                          in_place_t>,
-      std::initializer_list<U> il, Args &&... args) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
-  }
-
-  template <
-      class U = T,
-      detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr,
-      detail::enable_forward_value<T, U> * = nullptr>
-  constexpr optional(U &&u) : base(in_place, std::forward<U>(u)) {}
-
-  template <
-      class U = T,
-      detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr,
-      detail::enable_forward_value<T, U> * = nullptr>
-  constexpr explicit optional(U &&u) : base(in_place, std::forward<U>(u)) {}
-
-  template <
-      class U, detail::enable_from_other<T, U, const U &> * = nullptr,
-      detail::enable_if_t<std::is_convertible<const U &, T>::value> * = nullptr>
-  optional(const optional<U> &rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(*rhs);
-  }
-
-  template <class U, detail::enable_from_other<T, U, const U &> * = nullptr,
-            detail::enable_if_t<!std::is_convertible<const U &, T>::value> * =
-                nullptr>
-  optional(const optional<U> &rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(*rhs);
-  }
-
-  template <
-      class U, detail::enable_from_other<T, U, U &&> * = nullptr,
-      detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr>
-  optional(optional<U> &&rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(std::move(*rhs));
-  }
-
-  template <
-      class U, detail::enable_from_other<T, U, U &&> * = nullptr,
-      detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr>
-  explicit optional(optional<U> &&rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(std::move(*rhs));
-  }
-
-  ~optional() = default;
-
-  optional &operator=(nullopt_t) noexcept {
-    if (has_value()) {
-      this->m_value.~T();
-      this->m_has_value = false;
-    }
-  }
-
-  // TODO conditionally delete, check exception guarantee
-  optional &operator=(const optional &rhs) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        this->m_value = rhs.m_value;
-      } else {
-        this->m_value.~T();
-        this->m_has_value = false;
-      }
-    }
-
-    if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(rhs.m_value);
-      this->m_has_value = true;
-    }
-  }
-
-  // TODO conditionally delete, check exception guarantee
-  optional &operator=(optional &&rhs) noexcept(
-      std::is_nothrow_move_assignable<T>::value
-          &&std::is_nothrow_move_constructible<T>::value) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        this->m_value = std::move(rhs.m_value);
-      } else {
-        this->m_value.~T();
-        this->m_has_value = false;
-      }
-    }
-
-    if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
-      this->m_has_value = true;
-    }
-  }
-
-  // TODO conditionally delete, check exception guarantee
-  template <class U = T, detail::enable_assign_forward<T, U> * = nullptr>
-  optional &operator=(U &&u) {
-    if (has_value()) {
-      this->m_value = std::forward<U>(u);
-    } else {
-      new (std::addressof(this->m_value)) T(std::forward<U>(u));
-      this->m_has_value = true;
-    }
-  }
-
-  // TODO check exception guarantee
-  template <class U,
-            detail::enable_assign_from_other<T, U, const U &> * = nullptr>
-  optional &operator=(const optional<U> &rhs) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        this->m_value = rhs.m_value;
-      } else {
-        this->m_value.~T();
-        this->m_has_value = false;
-      }
-    }
-
-    if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(rhs.m_value);
-      this->m_has_value = true;
-    }
-  }
-
-  // TODO check exception guarantee
-  template <class U, detail::enable_assign_from_other<T, U, U> * = nullptr>
-  optional &operator=(optional<U> &&rhs) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        this->m_value = std::move(rhs.m_value);
-      } else {
-        this->m_value.~T();
-        this->m_has_value = false;
-      }
-    }
-
-    if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
-      this->m_has_value = true;
-    }
-  }
-
-  template <class... Args> T &emplace(Args &&... args) {
-    static_assert(std::is_constructible<T, Args &&...>::value,
-                  "T must be constructible with Args");
-
-    *this = nullopt;
-    new (std::addressof(this->m_value)) T(std::forward<Args>(args)...);
-  }
-
-  template <class U, class... Args>
-  detail::enable_if_t<
-      std::is_constructible<T, std::initializer_list<U> &, Args &&...>::value,
-      T &>
-  emplace(std::initializer_list<U> il, Args &&... args) {
-    *this = nullopt;
-    new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
-  }
-
-  void
-  swap(optional &rhs) noexcept(std::is_nothrow_move_constructible<T>::value
-                                   &&detail::is_nothrow_swappable<T>::value) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        using std::swap;
-        swap(**this, *rhs);
-      } else {
-        new (&rhs.m_value) T(std::move(this->m_value));
-        this->m_value.T::~T();
-      }
-    } else if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
-      rhs.m_value.T::~T();
-    }
-  }
-
-  constexpr const T *operator->() const {
-    return std::addressof(this->m_value);
-  }
-  TL_OPTIONAL_11_CONSTEXPR T *operator->() {
-    return std::addressof(this->m_value);
-  }
-  constexpr const T &operator*() const & { return this->m_value; }
-  TL_OPTIONAL_11_CONSTEXPR T &operator*() & { return this->m_value; }
-  TL_OPTIONAL_11_CONSTEXPR T &&operator*() && {
-    return std::move(this->m_value);
-  }
-  constexpr const T &&operator*() const && { return std::move(this->m_value); }
-  constexpr explicit operator bool() const noexcept {
-    return this->m_has_value;
-  }
-  constexpr bool has_value() const noexcept { return this->m_has_value; }
-  TL_OPTIONAL_11_CONSTEXPR const T &value() const & {
-    if (has_value())
-      return this->m_value;
-    throw bad_optional_access();
-  }
-  TL_OPTIONAL_11_CONSTEXPR T &value() & {
-    if (has_value())
-      return this->m_value;
-    throw bad_optional_access();
-  }
-  TL_OPTIONAL_11_CONSTEXPR T &&value() && {
-    if (has_value())
-      return std::move(this->m_value);
-    throw bad_optional_access();
-  }
-  constexpr const T &&value() const && {
-    if (has_value())
-      return std::move(this->m_value);
-    throw bad_optional_access();
-  }
-  template <class U> constexpr T value_or(U &&u) const & {
-    static_assert(std::is_copy_constructible<T>::value &&
-                      std::is_convertible<U &&, T>::value,
-                  "T must be copy constructible and convertible from U");
-    return has_value() ? **this : static_cast<T>(std::forward<U>(u));
-  }
-  template <class U> constexpr T value_or(U &&u) && {
-    static_assert(std::is_move_constructible<T>::value &&
-                      std::is_convertible<U &&, T>::value,
-                  "T must be move constructible and convertible from U");
-    return has_value() ? **this : static_cast<T>(std::forward<U>(u));
-  }
-
-  void reset() noexcept {
-    if (has_value()) {
-      this->m_value.~T();
-      this->m_has_value = false;
-    }
-  }
-
-
-  /// \group and_then
-  /// Carries out some operation which returns an optional on the stored object if there is one.
-  /// \requires `std::invoke(std::forward<F>(f), value())` returns a `std::optional<U>` for some `U`.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
-  template <class F>
-  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) & {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : result(nullopt);
-  }
-
-  /// \group and_then_rval
-  /// Carries out some operation which returns an optional on the stored object if there is one.
-  /// \requires `std::invoke(std::forward<F>(f), std::move(value()))` returns a `std::optional<U>` for some `U`.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), std::move(value()))`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), std::move(value()))` is returned.
-  template <class F>
-  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) && {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(nullopt);
-  }
-
-  /// \group and_then
-  template <class F>
-  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const & {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : result(nullopt);
-  }
-
-  /// \group and_then_rval
-  template <class F>
-  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const && {
-    using result = detail::invoke_result_t<F, T>;
-    static_assert(detail::is_optional<result>::value,
-                  "F must return an optional");
-
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(nullopt);
-  }
-
-  /// \group map
-  /// \synopsis template <class F> auto map(F &&f) &;
-  /// \brief Carries out some operation on the stored object if there is one.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), value())` and is returned.
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &> * = nullptr>
-      detail::get_map_return<F, T &> map(F &&f) &
-      noexcept(noexcept(detail::invoke(std::forward<F>(f),
-                                       std::declval<T &>()))) {
-    using result = detail::get_map_return<F, T &>;
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : result(nullopt);
-  }
-
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) & {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), **this);
-    return monostate{};
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) & {
-    using result = detail::get_map_return<F, T &>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), **this)
-               : result(nullopt);
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) & {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), **this);
-    return monostate{};
-  }
-
-  /// \group map_rval
-  /// \synopsis template <class F> auto map(F &&f) &;
-  /// \brief Carries out some operation on the stored object if there is one.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), std::move(value()))`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), std::move(value()))` and is returned.
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    using result = detail::get_map_return<F, T &&>;
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(nullopt);
-  }
-
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    using result = detail::get_map_return<F, T &&>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), std::move(**this))
-               : result(nullopt);
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-
-  /// \group map
-  /// \synopsis template <class F> auto map(F &&f) const &;
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &> * = nullptr>
-  constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
-    using result = detail::get_map_return<F, T const &>;
-    return this->has_value()
-               ? result(detail::invoke(std::forward<F>(f), **this))
-               : result(nullopt);
-  }
-
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &> * = nullptr>
-  detail::get_map_return<F, T const &> map(F &&f) const & {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), **this);
-    return monostate{};
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &> * = nullptr>
-  constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
-    using result = detail::get_map_return<F, const T &>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), **this)
-               : result(nullopt);
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &> * = nullptr>
-  detail::get_map_return<F, T const &> map(F &&f) const & {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), **this);
-    return monostate{};
-  }
-
-  /// \group map_rval
-  /// \synopsis template <class F> auto map(F &&f) const &&;
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &&> * = nullptr>
-  constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
-    using result = detail::get_map_return<F, const T &&>;
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(nullopt);
-  }
-
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &&> * = nullptr>
-  detail::get_map_return<F, T const &&> map(F &&f) const && {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &&> * = nullptr>
-  constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
-    using result = detail::get_map_return<F, const T &&>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), std::move(**this))
-               : result(nullopt);
-  }
-
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &&> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) const && {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-
-  /// \group or_else
-  /// \brief Calls `f` if the optional is empty
-  /// \synopsis template <class F> optional<T> or_else (F &&f) &;
-  /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
-  /// \effects If `*this` has a value, returns `*this`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
-  template <class F, detail::enable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
-    if (has_value())
-      return *this;
-
-    std::forward<F>(f)();
-    return nullopt;
-  }
-
-  template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
-    return has_value() ? *this : std::forward<F>(f)();
-  }
-
-  /// \group or_else_rval
-  /// \brief Calls `f` if the optional is empty
-  /// \synopsis template <class F> optional<T> or_else (F &&f) &&;
-  /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
-  /// \effects If `*this` has a value, returns `std::move(*this)`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
-  template <class F, detail::enable_if_ret_void<F> * = nullptr>
-  optional<T> or_else(F &&f) && {
-    if (has_value())
-      return std::move(*this);
-
-    std::forward<F>(f)();
-    return nullopt;
-  }
-
-  template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) && {
-    return has_value() ? std::move(*this) : std::forward<F>(f)();
-  }
-
-  /// \group or_else
-  /// \synopsis template <class F> optional<T> or_else (F &&f) const &;
-  template <class F, detail::enable_if_ret_void<F> * = nullptr>
-  optional<T> or_else(F &&f) const & {
-    if (has_value())
-      return *this;
-
-    std::forward<F>(f)();
-    return nullopt;
-  }
-
-  template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) const & {
-    return has_value() ? *this : std::forward<F>(f)();
-  }
-
-  /// \group or_else_rval
-  /// \synopsis template <class F> optional<T> or_else (F &&f) const &&;
-  template <class F, detail::enable_if_ret_void<F> * = nullptr>
-  optional<T> or_else(F &&f) const && {
-    if (has_value())
-      return std::move(*this);
-
-    std::forward<F>(f)();
-    return nullopt;
-  }
-
-  template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> or_else(F &&f) const && {
-    return has_value() ? std::move(*this) : std::forward<F>(f)();
-  }
-
-
-  /// \group map_or
-  /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
-  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
-  /// Otherwise `u` is returned.
-  template <class F, class U> U map_or(F &&f, U &&u) & {
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : std::forward<U>(u);
-  }
-
-  /// \group map_or_val
-  /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
-  /// \details If there is a value stored, then `f` is called with `std::move(**this)` and the value is returned.
-  /// Otherwise `u` is returned.
-  template <class F, class U> U map_or(F &&f, U &&u) && {
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : std::forward<U>(u);
-  }
-
-  /// \group map_or
-  template <class F, class U> U map_or(F &&f, U &&u) const & {
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : std::forward<U>(u);
-  }
-
-  /// \group map_or_val
-  template <class F, class U> U map_or(F &&f, U &&u) const && {
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : std::forward<U>(u);
-  }
-
-  /// \group map_or_else
-  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
-  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
-  /// Otherwise `std::forward<U>(u)()` is returned.
-  template <class F, class U> U map_or_else(F &&f, U &&u) & {
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : std::forward<U>(u)();
-  }
-
-  /// \group map_or_else_rval
-  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
-  /// \details If there is a value stored, then `f` is called with `std::move(**this)` and the value is returned.
-  /// Otherwise `std::forward<U>(u)()` is returned.
-  template <class F, class U> U map_or_else(F &&f, U &&u) && {
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : std::forward<U>(u)();
-  }
-
-  /// \group map_or_else
-  template <class F, class U> U map_or_else(F &&f, U &&u) const & {
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : std::forward<U>(u)();
-  }
-
-  /// \group map_or_else_rval
-  template <class F, class U> U map_or_else(F &&f, U &&u) const && {
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : std::forward<U>(u)();
-  }
-};
-
-// template <class T> optional(T)->optional<T>;
-} // namespace tl
