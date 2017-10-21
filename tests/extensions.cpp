@@ -9,7 +9,7 @@
   REQUIRE(e);
 
 constexpr int get_int(int) { return 42; }
-TL_OPTIONAL_MSVC_2015_CONSTEXPR tl::optional<int> get_opt_int(int) { return 42; }
+TL_OPTIONAL_11_CONSTEXPR tl::optional<int> get_opt_int(int) { return 42; }
 
 // What is Clang Format up to?!
 TEST_CASE("Monadic operations",
@@ -193,7 +193,7 @@ REQUIRE(!o39r);
 }
 
 SECTION("map constexpr") {
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49)
   // test each overload in turn
   constexpr tl::optional<int> o16 = 42;
   constexpr auto o16r = o16.map(get_int);
@@ -320,7 +320,7 @@ SECTION("and_then") {
 }
 
 SECTION("constexpr and_then") {
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49)
   constexpr tl::optional<int> o10 = 42;
   constexpr auto o10r = o10.and_then(get_opt_int);
   REQUIRE(*o10r == 42);

@@ -76,6 +76,7 @@ Tested on:
   * clang 3.7
   * clang 3.6
   * g++ 5.0
+  * g++ 4.9
 - Appveyor continuous integration
   * MSVC 2015
   * MSVC 2017
@@ -85,7 +86,6 @@ Tested on:
 
 Unsupported, but planning to support:
 
-- g++ 4.9
 - g++ 4.8
 
 

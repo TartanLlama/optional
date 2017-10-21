@@ -17,7 +17,15 @@
 #include <type_traits>
 #include <utility>
 
-#if __cplusplus == 201103L || (defined(_MSC_VER) && _MSC_VER == 1900)
+#if (defined(_MSC_VER) && _MSC_VER == 1900)
+#define TL_OPTIONAL_MSVC2015
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#define TL_OPTIONAL_GCC49
+#endif
+
+#if __cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) || defined(TL_OPTIONAL_GCC49)
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
@@ -25,13 +33,6 @@
 #define TL_OPTIONAL_11_CONSTEXPR constexpr
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER == 1900
-/// \exclude
-#define TL_OPTIONAL_MSVC_2015_CONSTEXPR
-#else
-/// \exclude
-#define TL_OPTIONAL_MSVC_2015_CONSTEXPR constexpr
-#endif
 
 namespace tl {
 /// \brief Used to represent an optional with no data; essentially a bool
@@ -257,10 +258,10 @@ struct is_nothrow_swappable
 
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
-    TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
+    TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
 
   template <class... U>
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() {
@@ -280,11 +281,11 @@ struct optional_storage_base {
 };
 
 template <class T> struct optional_storage_base<T, true> {
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base() noexcept
+    TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
 
   template <class... U>
-  TL_OPTIONAL_MSVC_2015_CONSTEXPR optional_storage_base(in_place_t,
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t,
                                                         U &&... u) noexcept
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
@@ -560,7 +561,7 @@ public:
   /// \group or_else
   /// \synopsis template <class F> optional<T> or_else (F &&f) &;
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
+  optional<T> TL_OPTIONAL_11_CONSTEXPR or_else(F &&f) & {
     if (has_value())
       return *this;
 
@@ -570,7 +571,7 @@ public:
 
   /// \exclude
   template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) & {
+  optional<T> TL_OPTIONAL_11_CONSTEXPR or_else(F &&f) & {
     return has_value() ? *this : std::forward<F>(f)();
   }
 
@@ -587,7 +588,7 @@ public:
 
   /// \exclude
   template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) && {
+  optional<T> TL_OPTIONAL_11_CONSTEXPR or_else(F &&f) && {
     return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
 
@@ -604,7 +605,7 @@ public:
 
   /// \exclude
   template <class F, detail::disable_if_ret_void<F> * = nullptr>
-  optional<T> TL_OPTIONAL_MSVC_2015_CONSTEXPR or_else(F &&f) const & {
+  optional<T> TL_OPTIONAL_11_CONSTEXPR or_else(F &&f) const & {
     return has_value() ? *this : std::forward<F>(f)();
   }
 
