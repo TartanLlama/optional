@@ -1346,7 +1346,10 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
   return optional<T>(in_place, il, std::forward<Args>(args)...);
 }
 
-// template <class T> optional(T)->optional<T>;
+#if __cplusplus >= 201703L
+template <class T> optional(T)->optional<T>;
+#endif
+
 } // namespace tl
 
 namespace std {
