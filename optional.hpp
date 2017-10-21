@@ -723,7 +723,7 @@ public:
 
   /// \returns `rhs` if `*this` is empty, otherwise the current value.
   /// \group disjunction
-  constexpr optional disjunction (const optional &rhs) & {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction (const optional &rhs) & {
     return has_value() ? *this : rhs;
   }
 
@@ -733,7 +733,7 @@ public:
   }
 
   /// \group disjunction
-  constexpr optional disjunction (const optional &rhs) && {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction (const optional &rhs) && {
     return has_value() ? std::move(*this) : rhs;
   }
 
@@ -743,7 +743,7 @@ public:
   }
 
   /// \group disjunction
-  constexpr optional disjunction (optional &&rhs) & {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction (optional &&rhs) & {
     return has_value() ? *this : std::move(rhs);
   }
 
@@ -753,7 +753,7 @@ public:
   }
 
   /// \group disjunction
-  constexpr optional disjunction (optional &&rhs) && {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction (optional &&rhs) && {
     return has_value() ? std::move(*this) : std::move(rhs);
   }
 
