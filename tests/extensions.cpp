@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "optional.hpp"
+#include <string>
 
 #define TOKENPASTE(x, y) x##y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
@@ -339,7 +340,62 @@ SECTION("constexpr and_then") {
 }
 
 SECTION("or else") {
-    //TODO
+    tl::optional<int> o1 = 42;
+    REQUIRE(*(o1.or_else([] { return tl::make_optional(13); })) == 42);
+
+    tl::optional<int> o2;
+    REQUIRE(*(o2.or_else([] { return tl::make_optional(13); })) == 13);
+}
+
+SECTION("disjunction") {
+    tl::optional<int> o1 = 42;
+    tl::optional<int> o2 = 12;
+    tl::optional<int> o3;
+
+    REQUIRE(*o1.disjunction(o2) == 42);
+    REQUIRE(*o1.disjunction(o3) == 42);
+    REQUIRE(*o2.disjunction(o1) == 12);
+    REQUIRE(*o2.disjunction(o3) == 12);
+    REQUIRE(*o3.disjunction(o1) == 42);
+    REQUIRE(*o3.disjunction(o2) == 12);
+}
+
+SECTION("conjunction") {
+    tl::optional<int> o1 = 42;
+    REQUIRE(*o1.conjunction(42.0) == 42.0);
+    REQUIRE(*o1.conjunction(std::string{"hello"}) == std::string{"hello"});
+    REQUIRE(!o1.conjunction(tl::nullopt));
+
+    tl::optional<int> o2;
+    REQUIRE(!o2.conjunction(42.0));
+    REQUIRE(!o2.conjunction(std::string{"hello"}));
+    REQUIRE(!o2.conjunction(tl::nullopt));
+}
+
+SECTION("map_or") {
+    tl::optional<int> o1 = 21;
+    REQUIRE((o1.map_or([](auto x) { return x * 2; }, 13)) == 42);
+
+    tl::optional<int> o2;
+    REQUIRE((o2.map_or([](auto x) { return x * 2; }, 13)) == 13);
+}
+
+SECTION("map_or_else") {
+    tl::optional<int> o1 = 21;
+    REQUIRE((o1.map_or_else([](auto x) { return x * 2; }, []{return 13;})) == 42);
+
+    tl::optional<int> o2;
+    REQUIRE((o2.map_or_else([](auto x) { return x * 2; }, []{return 13;})) == 13);
+}
+
+SECTION("take") {
+    tl::optional<int> o1 = 42;
+    REQUIRE(*o1.take() == 42);
+    REQUIRE(!o1);
+
+    tl::optional<int> o2;
+    REQUIRE(!o2.take());
+    REQUIRE(!o2);
 }
 }
 ;

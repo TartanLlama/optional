@@ -177,16 +177,16 @@ public:
     U <a href='doc_optional.md#tl::optional-T-::map_or(F&&,U&&)&'>map_or</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
     
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+    auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) &amp;;
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+    auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) &amp;&amp;;
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+    auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) const &amp;;
     template &lt;class F, class U&gt;
-    U <a href='doc_optional.md#tl::optional-T-::map_or_else(F&&,U&&)&'>map_or_else</a>(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;
+    auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) const &amp;&amp;;
     
     template &lt;class U&gt;
-    constexpr <a href='doc_optional.md#tl::optional-T-'>optional&lt;U&gt;</a> <a href='doc_optional.md#tl::optional-T-::conjunction(U&&)const'>conjunction</a>(U&amp;&amp; u) const;
+    constexpr <a href='doc_optional.md#tl::optional-T-'>optional&lt;typename std::decay&lt;U&gt;::type&gt;</a> <a href='doc_optional.md#tl::optional-T-::conjunction(U&&)const'>conjunction</a>(U&amp;&amp; u) const;
     
     constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) &amp;;
     constexpr <a href='doc_optional.md#tl::optional-T-'>optional</a> <a href='doc_optional.md#tl::optional-T-::disjunction(constoptional-T-&)&'>disjunction</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) const &amp;;
@@ -333,16 +333,16 @@ If there is a value stored, then `f` is called with `**this` and the value is re
 ### Function template `tl::optional::map_or_else`<a id="tl::optional-T-::map_or_else(F&&,U&&)&"></a>
 
 <pre><code class="language-cpp">(1)  template &lt;class F, class U&gt;
-     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) &amp;;
+     auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) &amp;;
 
 (2)  template &lt;class F, class U&gt;
-     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) &amp;&amp;;
+     auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) &amp;&amp;;
 
 (3)  template &lt;class F, class U&gt;
-     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) const &amp;;
+     auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) const &amp;;
 
 (4)  template &lt;class F, class U&gt;
-     U map_or_else(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;</code></pre>
+     auto map_or_else(F &amp;&amp;f, U &amp;&amp;u) const &amp;&amp;;</code></pre>
 
 Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
 
@@ -351,7 +351,7 @@ If there is a value stored, then `f` is called with `**this` and the value is re
 ### Function template `tl::optional::conjunction`<a id="tl::optional-T-::conjunction(U&&)const"></a>
 
 <pre><code class="language-cpp">template &lt;class U&gt;
-constexpr <a href='doc_optional.md#tl::optional-T-'>optional&lt;U&gt;</a> conjunction(U&amp;&amp; u) const;</code></pre>
+constexpr <a href='doc_optional.md#tl::optional-T-'>optional&lt;typename std::decay&lt;U&gt;::type&gt;</a> conjunction(U&amp;&amp; u) const;</code></pre>
 
 *Returns*: `u` if `*this` has a value, otherwise an empty optional.
 

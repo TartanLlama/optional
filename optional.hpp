@@ -683,32 +683,42 @@ public:
   /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
   /// Otherwise `std::forward<U>(u)()` is returned.
   /// \group map_or_else
-  template <class F, class U> U map_or_else(F &&f, U &&u) & {
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) &;
+  template <class F, class U>
+  detail::invoke_result_t<U> map_or_else(F &&f, U &&u) & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u)();
   }
 
   /// \group map_or_else
-  template <class F, class U> U map_or_else(F &&f, U &&u) && {
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) &&;
+  template <class F, class U>
+  detail::invoke_result_t<U> map_or_else(F &&f, U &&u) && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u)();
   }
 
   /// \group map_or_else
-  template <class F, class U> U map_or_else(F &&f, U &&u) const & {
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &;
+  template <class F, class U>
+  detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u)();
   }
 
   /// \group map_or_else
-  template <class F, class U> U map_or_else(F &&f, U &&u) const && {
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &&;
+  template <class F, class U>
+  detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u)();
   }
 
   /// \returns `u` if `*this` has a value, otherwise an empty optional.
-  template <class U> constexpr optional<U> conjunction (U &&u) const {
-    return has_value() ? u : nullopt;
+  template <class U>
+  constexpr optional<typename std::decay<U>::type> conjunction (U &&u) const {
+    using result = optional<detail::decay_t<U>>;
+    return has_value() ? result{u} : result{nullopt};
   }
 
   /// \returns `rhs` if `*this` is empty, otherwise the current value.
