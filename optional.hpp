@@ -910,6 +910,8 @@ public:
       this->m_value.~T();
       this->m_has_value = false;
     }
+
+    return *this;
   }
 
   // TODO conditionally delete, check exception guarantee
