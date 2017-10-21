@@ -930,6 +930,8 @@ public:
       new (std::addressof(this->m_value)) T(rhs.m_value);
       this->m_has_value = true;
     }
+
+    return *this;
   }
 
   // TODO conditionally delete, check exception guarantee
@@ -952,6 +954,8 @@ public:
       new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
       this->m_has_value = true;
     }
+
+    return *this;
   }
 
   // TODO conditionally delete, check exception guarantee
@@ -965,6 +969,8 @@ public:
       new (std::addressof(this->m_value)) T(std::forward<U>(u));
       this->m_has_value = true;
     }
+
+    return *this;
   }
 
   // TODO check exception guarantee
@@ -988,6 +994,8 @@ public:
       new (std::addressof(this->m_value)) T(*rhs);
       this->m_has_value = true;
     }
+
+    return *this;
   }
 
   // TODO check exception guarantee
@@ -1010,6 +1018,8 @@ public:
       new (std::addressof(this->m_value)) T(std::move(*rhs));
       this->m_has_value = true;
     }
+
+    return *this;
   }
 
   /// Constructs the value in-place, destroying the current one if there is one.
