@@ -70,7 +70,7 @@ The interface is the same as `std::optional`, but the following member functions
 
 Tested on:
 
-- Travis continuous integration
+- Linux CI
   * clang 3.9
   * clang 3.8
   * clang 3.7
@@ -79,10 +79,10 @@ Tested on:
   * g++ 5.0
   * g++ 4.9
   * g++ 4.8
-- Appveyor continuous integration
+- Windows CI
   * MSVC 2015
   * MSVC 2017
-- Manual
+- Linux manual
   * g++ 7.2
   * g++ 5.4
 
