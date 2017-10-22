@@ -62,7 +62,7 @@ The interface is the same as `std::optional`, but the following member functions
   * `tl::optional<int>){}.conjunction(13); //empty`
 - `disjunction`: returns the argument if the optional is empty, otherwise the current value.
   * `tl::make_optional(42).disjunction(13); //42`
-  * `tl::optional<int>){}.disjunction(13); //13`
+  * `tl::optional<int>{}.disjunction(13); //13`
 - `take`: returns the current value, leaving the optional empty.
   * `opt_string.take().map(&std::string::size); //opt_string now empty;`
 
