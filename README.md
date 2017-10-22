@@ -92,6 +92,10 @@ Requires [Standardese](https://github.com/foonathan/standardese) for generating 
 
 Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bundled in the test directory.
 
+### Standards Proposal
+
+This library also serves as an implementation of WG21 standards paper [P0798R0: Monadic operations for std::optional](https://wg21.tartanllama.xyz/monadic-optional). This paper proposes adding `map`, `and_then`, and `or_else` to `std::optional`.
+
 ----------
 
 [![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png)]("http://creativecommons.org/publicdomain/zero/1.0/")
