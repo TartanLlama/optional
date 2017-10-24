@@ -28,6 +28,10 @@
 #define TL_OPTIONAL_GCC49
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ == 0)
+#define TL_OPTIONAL_GCC50
+#endif
+
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
 #define TL_OPTIONAL_NO_CONSTRR
 #endif
@@ -36,8 +40,9 @@
 #define TL_OPTIONAL_CXX14
 #endif
 
-#if __cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) ||                 \
-    defined(TL_OPTIONAL_GCC49)
+#if (__cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) ||                \
+     defined(TL_OPTIONAL_GCC49)) &&                                            \
+    !defined(TL_OPTIONAL_GCC50)
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
