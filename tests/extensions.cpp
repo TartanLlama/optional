@@ -335,11 +335,20 @@ TEST_CASE("Monadic operations", "[monadic]") {
   };
 
 #ifdef TL_OPTIONAL_CXX14
-  // Reported by Mark Papadakis
-  SECTION("map const correctness") {
+  SECTION("Issue #1") {
     tl::optional<foo> f = foo{};
     auto l = [](auto &&x) { x.non_const(); };
     f.map(l);
   }
 #endif
+
+  struct overloaded {
+    tl::optional<int> operator()(foo &) { return 0; }
+    tl::optional<std::string> operator()(const foo &) { return ""; }
+  };
+
+  SECTION("Issue #2") {
+    tl::optional<foo> f = foo{};
+    auto x = f.and_then(overloaded{});
+  }
 };

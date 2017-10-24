@@ -337,6 +337,60 @@ template <class T> class optional : private detail::optional_storage_base<T> {
   using base = detail::optional_storage_base<T>;
 
 public:
+#ifdef TL_OPTIONAL_CXX14
+  /// \group and_then
+  /// Carries out some operation which returns an optional on the stored object
+  /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
+  /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
+  /// of `std::invoke(std::forward<F>(f), value())`. Returns a
+  /// `std::optional<U>`. The return value is empty if `*this` is empty,
+  /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
+  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
+  /// and_then(F &&f) &;
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto and_then(F &&f) & {
+    using result = detail::invoke_result_t<F, T &>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(nullopt);
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &&;
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto and_then(F &&f) && {
+    using result = detail::invoke_result_t<F, T &&>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(nullopt);
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &;
+  template <class F> constexpr auto and_then(F &&f) const & {
+    using result = detail::invoke_result_t<F, const T &>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(nullopt);
+  }
+
+#ifndef TL_OPTIONAL_NO_CONSTRR
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
+  template <class F> constexpr auto and_then(F &&f) const && {
+    using result = detail::invoke_result_t<F, const T &&>;
+    static_assert(detail::is_optional<result>::value,
+                  "F must return an optional");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(nullopt);
+  }
+#endif
+#else
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
@@ -347,8 +401,8 @@ public:
   /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
   /// and_then(F &&f) &;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) & {
-    using result = detail::invoke_result_t<F, T>;
+  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T &> and_then(F &&f) & {
+    using result = detail::invoke_result_t<F, T &>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
@@ -359,8 +413,8 @@ public:
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &&;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) && {
-    using result = detail::invoke_result_t<F, T>;
+  TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T &&> and_then(F &&f) && {
+    using result = detail::invoke_result_t<F, T &&>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
@@ -371,8 +425,8 @@ public:
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &;
   template <class F>
-  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const & {
-    using result = detail::invoke_result_t<F, T>;
+  constexpr detail::invoke_result_t<F, const T &> and_then(F &&f) const & {
+    using result = detail::invoke_result_t<F, const T &>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
@@ -384,14 +438,15 @@ public:
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
   template <class F>
-  constexpr detail::invoke_result_t<F, T> and_then(F &&f) const && {
-    using result = detail::invoke_result_t<F, T>;
+  constexpr detail::invoke_result_t<F, const T &&> and_then(F &&f) const && {
+    using result = detail::invoke_result_t<F, const T &&>;
     static_assert(detail::is_optional<result>::value,
                   "F must return an optional");
 
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : result(nullopt);
   }
+#endif
 #endif
 
 #ifdef TL_OPTIONAL_CXX14
