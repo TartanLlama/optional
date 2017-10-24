@@ -32,7 +32,7 @@ std::optional<image> get_cute_cat (const image& img) {
 You can do this:
 
 ```
-std::optional<image> get_cute_cat (const image& img) {
+tl::optional<image> get_cute_cat (const image& img) {
     return crop_to_cat(img)
            .and_then(add_bow_tie)
            .and_then(make_eyes_sparkle)
