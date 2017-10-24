@@ -11,6 +11,9 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 ///
 
+#ifndef TL_OPTIONAL_HPP
+#define TL_OPTIONAL_HPP
+
 #include <exception>
 #include <functional>
 #include <new>
@@ -1381,3 +1384,5 @@ template <class T> struct hash<tl::optional<T>> {
   }
 };
 } // namespace std
+
+#endif
