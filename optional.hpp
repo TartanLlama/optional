@@ -32,14 +32,18 @@
 #define TL_OPTIONAL_NO_CONSTRR
 #endif
 
-#if __cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) || defined(TL_OPTIONAL_GCC49)
+#if __cplusplus > 201103L
+#define TL_OPTIONAL_CXX14
+#endif
+
+#if __cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) ||                 \
+    defined(TL_OPTIONAL_GCC49)
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR constexpr
 #endif
-
 
 namespace tl {
 /// \brief Used to represent an optional with no data; essentially a bool
@@ -118,36 +122,20 @@ using invoke_result = invoke_result_impl<F, void, Us...>;
 template <class F, class... Us>
 using invoke_result_t = typename invoke_result<F, Us...>::type;
 
-
 // Change void to tl::monostate
 template <class U>
 using fixup_void = conditional_t<std::is_void<U>::value, monostate, U>;
 
-template <class F, class... U> struct get_invoke_optional_ret {
-  using type = invoke_result_t<
-      conditional_t<std::is_lvalue_reference<F>::value,
-                    typename remove_reference_t<F>::value_type &,
-                    typename remove_reference_t<F>::value_type &&>,
-      U...>;
-};
-
-template <class F, class... U>
-using get_invoke_ret = typename conditional_t<is_optional<F>::value,
-                                              get_invoke_optional_ret<F, U...>,
-                                              invoke_result<F, U...>>::type;
-
-template <class F, class U>
-using get_map_return = optional<fixup_void<get_invoke_ret<F, U>>>;
+template <class F, class U, class = invoke_result_t<F, U>>
+using get_map_return = optional<fixup_void<invoke_result_t<F, U>>>;
 
 // Check if invoking F for some Us returns void
+template <class F, class = void, class... U> struct returns_void_impl;
 template <class F, class... U>
-using returns_void = std::is_void<get_invoke_ret<F, U...>>;
-
-template <class T>
-using disable_if_optional = enable_if_t<!is_optional<T>::value>;
-
-template <class T>
-using enable_if_optional = enable_if_t<is_optional<T>::value>;
+struct returns_void_impl<F, void_t<invoke_result_t<F, U...>>, U...>
+    : std::is_void<invoke_result_t<F, U...>> {};
+template <class F, class... U>
+using returns_void = returns_void_impl<F, void, U...>;
 
 template <class T, class... U>
 using enable_if_ret_void = enable_if_t<returns_void<T &&, U...>::value>;
@@ -270,10 +258,10 @@ struct is_nothrow_swappable
 };
 #endif
 
-
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
-    TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept : m_dummy(), m_has_value(false) {}
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
+      : m_dummy(), m_has_value(false) {}
 
   template <class... U>
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
@@ -296,12 +284,11 @@ struct optional_storage_base {
 };
 
 template <class T> struct optional_storage_base<T, true> {
-    TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
 
   template <class... U>
-  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t,
-                                                        U &&... u) noexcept
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() = default;
@@ -314,6 +301,7 @@ template <class T> struct optional_storage_base<T, true> {
 
   bool m_has_value = false;
 };
+
 } // namespace detail
 
 /// \brief A tag type to represent an empty optional
@@ -339,18 +327,25 @@ public:
   const char *what() const noexcept { return "Optional has no value"; }
 };
 
-/// An optional object is an object that contains the storage for another object and manages the lifetime of this contained object, if any. The contained object may be initialized after the optional object has been initialized, and may be destroyed before the optional object has been destroyed. The initialization state of the contained object is tracked by the optional object.
+/// An optional object is an object that contains the storage for another object
+/// and manages the lifetime of this contained object, if any. The contained
+/// object may be initialized after the optional object has been initialized,
+/// and may be destroyed before the optional object has been destroyed. The
+/// initialization state of the contained object is tracked by the optional
+/// object.
 template <class T> class optional : private detail::optional_storage_base<T> {
   using base = detail::optional_storage_base<T>;
 
 public:
-
   /// \group and_then
-  /// Carries out some operation which returns an optional on the stored object if there is one.
-  /// \requires `std::invoke(std::forward<F>(f), value())` returns a `std::optional<U>` for some `U`.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
-  /// \group and_then
-  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
+  /// Carries out some operation which returns an optional on the stored object
+  /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
+  /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
+  /// of `std::invoke(std::forward<F>(f), value())`. Returns a
+  /// `std::optional<U>`. The return value is empty if `*this` is empty,
+  /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
+  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
+  /// and_then(F &&f) &;
   template <class F>
   TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T> and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T>;
@@ -385,7 +380,7 @@ public:
                        : result(nullopt);
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
   template <class F>
@@ -397,187 +392,71 @@ public:
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : result(nullopt);
   }
-  #endif
+#endif
 
+#ifdef TL_OPTIONAL_CXX14
   /// \brief Carries out some operation on the stored object if there is one.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise an `optional<U>` is constructed from the return value of `std::invoke(std::forward<F>(f), value())` and is returned.
-  /// \group map
-  /// \synopsis template <class F> auto map(F &&f) &;
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &> * = nullptr>
-      detail::get_map_return<F, T &> map(F &&f) &
-      noexcept(noexcept(detail::invoke(std::forward<F>(f),
-                                       std::declval<T &>()))) {
-    using result = detail::get_map_return<F, T &>;
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
-                       : result(nullopt);
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `optional<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
+  template <class F> auto map(F &&f) & {
+    return map_impl(*this, std::forward<F>(f));
   }
 
-  /// \exclude
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) & {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), **this);
-    return monostate{};
+  template <class F> auto map(F &&f) && {
+    return map_impl(std::move(*this), std::forward<F>(f));
   }
 
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) & {
-    using result = detail::get_map_return<F, T &>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), **this)
-               : result(nullopt);
+  template <class F> auto map(F &&f) const & {
+    return map_impl(*this, std::forward<F>(f));
   }
 
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) & {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), **this);
-    return monostate{};
+#ifndef TL_OPTIONAL_NO_CONSTRR
+  template <class F> auto map(F &&f) const && {
+    return map_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
+#else
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `optional<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
+  template <class F>
+  decltype(map_impl(std::declval<optional &>(), std::declval<F &&>()))
+  map(F &&f) & {
+    return map_impl(*this, std::forward<F>(f));
   }
 
-  /// \group map
-  /// \synopsis template <class F> auto map(F &&f) &&;
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    using result = detail::get_map_return<F, T &&>;
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(nullopt);
+  template <class F>
+  decltype(map_impl(std::declval<optional &&>(), std::declval<F &&>()))
+  map(F &&f) && {
+    return map_impl(std::move(*this), std::forward<F>(f));
   }
 
-  /// \exclude
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), std::move(**this));
-    return monostate{};
+  template <class F>
+  decltype(map_impl(std::declval<const optional &>(), std::declval<F &&>()))
+  map(F &&f) const & {
+    return map_impl(*this, std::forward<F>(f));
   }
 
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    using result = detail::get_map_return<F, T &&>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), std::move(**this))
-               : result(nullopt);
+#ifndef TL_OPTIONAL_NO_CONSTRR
+  template <class F>
+  decltype(map_impl(std::declval<const optional &&>(), std::declval<F &&>()))
+  map(F &&f) const && {
+    return map_impl(std::move(*this), std::forward<F>(f));
   }
-
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T &&> * = nullptr>
-  detail::get_map_return<F, T &&> map(F &&f) && {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-
-  /// \group map
-  /// \synopsis template <class F> auto map(F &&f) const &;
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &> * = nullptr>
-  constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
-    using result = detail::get_map_return<F, T const &>;
-    return this->has_value()
-               ? result(detail::invoke(std::forward<F>(f), **this))
-               : result(nullopt);
-  }
-
-  /// \exclude
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &> * = nullptr>
-  detail::get_map_return<F, T const &> map(F &&f) const & {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), **this);
-    return monostate{};
-  }
-
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &> * = nullptr>
-  constexpr detail::get_map_return<F, T const &> map(F &&f) const & {
-    using result = detail::get_map_return<F, const T &>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), **this)
-               : result(nullopt);
-  }
-
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &> * = nullptr>
-  detail::get_map_return<F, T const &> map(F &&f) const & {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), **this);
-    return monostate{};
-  }
-
-  #ifndef TL_OPTIONAL_NO_CONSTRR
-  /// \group map
-  /// \synopsis template <class F> auto map(F &&f) const &&;
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &&> * = nullptr>
-  constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
-    using result = detail::get_map_return<F, const T &&>;
-    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(nullopt);
-  }
-
-  /// \exclude
-  template <class F, detail::disable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &&> * = nullptr>
-  detail::get_map_return<F, T const &&> map(F &&f) const && {
-    if (!has_value())
-      return nullopt;
-
-    detail::invoke(std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::disable_if_ret_void<F, T const &&> * = nullptr>
-  constexpr detail::get_map_return<F, T const &&> map(F &&f) const && {
-    using result = detail::get_map_return<F, const T &&>;
-    return (f.has_value() && has_value())
-               ? detail::invoke(*std::forward<F>(f), std::move(**this))
-               : result(nullopt);
-  }
-
-  /// \exclude
-  template <class F, detail::enable_if_optional<F> * = nullptr,
-            detail::enable_if_ret_void<F, T const &&> * = nullptr>
-  detail::get_map_return<F, T &> map(F &&f) const && {
-    if (!f.has_value() || !has_value())
-      return nullopt;
-
-    detail::invoke(*std::forward<F>(f), std::move(**this));
-    return monostate{};
-  }
-  #endif
+#endif
+#endif
 
   /// \brief Calls `f` if the optional is empty
-  /// \requires `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
-  /// \effects If `*this` has a value, returns `*this`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
-  /// \group or_else
+  /// \requires `std::invoke_result_t<F>` must be void or convertible to
+  /// `optional<T>`. \effects If `*this` has a value, returns `*this`.
+  /// Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns
+  /// `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`. \group or_else
   /// \synopsis template <class F> optional<T> or_else (F &&f) &;
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> TL_OPTIONAL_11_CONSTEXPR or_else(F &&f) & {
@@ -628,7 +507,7 @@ public:
     return has_value() ? *this : std::forward<F>(f)();
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
   template <class F, detail::enable_if_ret_void<F> * = nullptr>
   optional<T> or_else(F &&f) const && {
@@ -644,12 +523,11 @@ public:
   optional<T> or_else(F &&f) const && {
     return has_value() ? std::move(*this) : std::forward<F>(f)();
   }
-  #endif
+#endif
 
-  /// \brief Maps the stored value with `f` if there is one, otherwise returns `u`
-  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
-  /// Otherwise `u` is returned.
-  /// \group map_or
+  /// \brief Maps the stored value with `f` if there is one, otherwise returns
+  /// `u` \details If there is a value stored, then `f` is called with `**this`
+  /// and the value is returned. Otherwise `u` is returned. \group map_or
   template <class F, class U> U map_or(F &&f, U &&u) & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u);
@@ -667,19 +545,19 @@ public:
                        : std::forward<U>(u);
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map_or
   template <class F, class U> U map_or(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u);
   }
-  #endif
+#endif
 
-  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u` and returns the result.
-  /// \details If there is a value stored, then `f` is called with `**this` and the value is returned.
-  /// Otherwise `std::forward<U>(u)()` is returned.
-  /// \group map_or_else
-  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) &;
+  /// \brief Maps the stored value with `f` if there is one, otherwise calls `u`
+  /// and returns the result. \details If there is a value stored, then `f` is
+  /// called with `**this` and the value is returned. Otherwise
+  /// `std::forward<U>(u)()` is returned. \group map_or_else \synopsis template
+  /// <class F, class U>\nauto map_or_else(F &&f, U &&u) &;
   template <class F, class U>
   detail::invoke_result_t<U> map_or_else(F &&f, U &&u) & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
@@ -695,74 +573,76 @@ public:
   }
 
   /// \group map_or_else
-  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &;
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u)
+  /// const &;
   template <class F, class U>
   detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
                        : std::forward<U>(u)();
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map_or_else
-  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &&;
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u)
+  /// const &&;
   template <class F, class U>
   detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : std::forward<U>(u)();
   }
-  #endif
+#endif
 
   /// \returns `u` if `*this` has a value, otherwise an empty optional.
   template <class U>
-  constexpr optional<typename std::decay<U>::type> conjunction (U &&u) const {
+  constexpr optional<typename std::decay<U>::type> conjunction(U &&u) const {
     using result = optional<detail::decay_t<U>>;
     return has_value() ? result{u} : result{nullopt};
   }
 
   /// \returns `rhs` if `*this` is empty, otherwise the current value.
   /// \group disjunction
-  TL_OPTIONAL_11_CONSTEXPR optional disjunction (const optional &rhs) & {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction(const optional &rhs) & {
     return has_value() ? *this : rhs;
   }
 
   /// \group disjunction
-  constexpr optional disjunction (const optional &rhs) const & {
+  constexpr optional disjunction(const optional &rhs) const & {
     return has_value() ? *this : rhs;
   }
 
   /// \group disjunction
-  TL_OPTIONAL_11_CONSTEXPR optional disjunction (const optional &rhs) && {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction(const optional &rhs) && {
     return has_value() ? std::move(*this) : rhs;
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group disjunction
-  constexpr optional disjunction (const optional &rhs) const && {
+  constexpr optional disjunction(const optional &rhs) const && {
     return has_value() ? std::move(*this) : rhs;
   }
-  #endif
+#endif
 
   /// \group disjunction
-  TL_OPTIONAL_11_CONSTEXPR optional disjunction (optional &&rhs) & {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction(optional &&rhs) & {
     return has_value() ? *this : std::move(rhs);
   }
 
   /// \group disjunction
-  constexpr optional disjunction (optional &&rhs) const & {
+  constexpr optional disjunction(optional &&rhs) const & {
     return has_value() ? *this : std::move(rhs);
   }
 
   /// \group disjunction
-  TL_OPTIONAL_11_CONSTEXPR optional disjunction (optional &&rhs) && {
+  TL_OPTIONAL_11_CONSTEXPR optional disjunction(optional &&rhs) && {
     return has_value() ? std::move(*this) : std::move(rhs);
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group disjunction
-  constexpr optional disjunction (optional &&rhs) const && {
+  constexpr optional disjunction(optional &&rhs) const && {
     return has_value() ? std::move(*this) : std::move(rhs);
   }
-  #endif
+#endif
 
   /// Takes the value out of the optional, leaving it empty
   /// \group take
@@ -786,14 +666,14 @@ public:
     return ret;
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group take
   optional take() const && {
     optional ret = std::move(*this);
     reset();
     return ret;
   }
-  #endif
+#endif
 
   using value_type = T;
 
@@ -828,10 +708,10 @@ public:
     }
   }
 
-
   /// Constructs the stored value in-place using the given arguments.
   /// \group in_place
-  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t, Args&&... args);
+  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t,
+  /// Args&&... args);
   template <class... Args>
   constexpr explicit optional(
       detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
@@ -839,7 +719,8 @@ public:
       : base(in_place, std::forward<Args>(args)...) {}
 
   /// \group in_place
-  /// \synopsis template <class U, class... Args>\nconstexpr explicit optional(in_place_t, std::initializer_list<U>&, Args&&... args);
+  /// \synopsis template <class U, class... Args>\nconstexpr explicit
+  /// optional(in_place_t, std::initializer_list<U>&, Args&&... args);
   template <class U, class... Args>
   TL_OPTIONAL_11_CONSTEXPR explicit optional(
       detail::enable_if_t<std::is_constructible<T, std::initializer_list<U> &,
@@ -921,7 +802,8 @@ public:
   // TODO conditionally delete, check exception guarantee
   /// Copy assignment.
   ///
-  /// Copies the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
+  /// Copies the value from `rhs` if there is one. Otherwise resets the stored
+  /// value in `*this`.
   optional &operator=(const optional &rhs) {
     if (has_value()) {
       if (rhs.has_value()) {
@@ -943,7 +825,8 @@ public:
   // TODO conditionally delete, check exception guarantee
   /// Move assignment.
   ///
-  /// Moves the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
+  /// Moves the value from `rhs` if there is one. Otherwise resets the stored
+  /// value in `*this`.
   optional &operator=(optional &&rhs) noexcept(
       std::is_nothrow_move_assignable<T>::value
           &&std::is_nothrow_move_constructible<T>::value) {
@@ -965,8 +848,8 @@ public:
   }
 
   // TODO conditionally delete, check exception guarantee
-  /// Assigns the stored value from `u`, destroying the old value if there was one.
-  /// \synopsis optional &operator=(U &&u);
+  /// Assigns the stored value from `u`, destroying the old value if there was
+  /// one. \synopsis optional &operator=(U &&u);
   template <class U = T, detail::enable_assign_forward<T, U> * = nullptr>
   optional &operator=(U &&u) {
     if (has_value()) {
@@ -982,8 +865,8 @@ public:
   // TODO check exception guarantee
   /// Converting copy assignment operator.
   ///
-  /// Copies the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
-  /// \synopsis optional &operator=(const optional<U> & rhs);
+  /// Copies the value from `rhs` if there is one. Otherwise resets the stored
+  /// value in `*this`. \synopsis optional &operator=(const optional<U> & rhs);
   template <class U,
             detail::enable_assign_from_other<T, U, const U &> * = nullptr>
   optional &operator=(const optional<U> &rhs) {
@@ -1007,8 +890,8 @@ public:
   // TODO check exception guarantee
   /// Converting move assignment operator.
   ///
-  /// Moves the value from `rhs` if there is one. Otherwise resets the stored value in `*this`.
-  /// \synopsis optional &operator=(optional<U> && rhs);
+  /// Moves the value from `rhs` if there is one. Otherwise resets the stored
+  /// value in `*this`. \synopsis optional &operator=(optional<U> && rhs);
   template <class U, detail::enable_assign_from_other<T, U, U> * = nullptr>
   optional &operator=(optional<U> &&rhs) {
     if (has_value()) {
@@ -1039,7 +922,8 @@ public:
   }
 
   /// \group emplace
-  /// \synopsis template <class U, class... Args>\nT& emplace(std::initializer_list<U> il, Args &&... args);
+  /// \synopsis template <class U, class... Args>\nT&
+  /// emplace(std::initializer_list<U> il, Args &&... args);
   template <class U, class... Args>
   detail::enable_if_t<
       std::is_constructible<T, std::initializer_list<U> &, Args &&...>::value,
@@ -1053,7 +937,8 @@ public:
   ///
   /// If neither optionals have a value, nothing happens.
   /// If both have a value, the values are swapped.
-  /// If one has a value, it is moved to the other and the movee is left valueless.
+  /// If one has a value, it is moved to the other and the movee is left
+  /// valueless.
   void
   swap(optional &rhs) noexcept(std::is_nothrow_move_constructible<T>::value
                                    &&detail::is_nothrow_swappable<T>::value) {
@@ -1100,10 +985,10 @@ public:
     return std::move(this->m_value);
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
   constexpr const T &&operator*() const && { return std::move(this->m_value); }
-  #endif
+#endif
 
   /// \returns whether or not the optional has a value
   /// \group has_value
@@ -1114,9 +999,8 @@ public:
     return this->m_has_value;
   }
 
-  /// \returns the contained value if there is one, otherwise throws [bad_optional_access]
-  /// \group value
-  /// \synopsis constexpr T &value();
+  /// \returns the contained value if there is one, otherwise throws
+  /// [bad_optional_access] \group value \synopsis constexpr T &value();
   TL_OPTIONAL_11_CONSTEXPR T &value() & {
     if (has_value())
       return this->m_value;
@@ -1136,14 +1020,14 @@ public:
     throw bad_optional_access();
   }
 
-  #ifndef TL_OPTIONAL_NO_CONSTRR
+#ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
   constexpr const T &&value() const && {
     if (has_value())
       return std::move(this->m_value);
     throw bad_optional_access();
   }
-  #endif
+#endif
 
   /// \returns the stored value if there is one, otherwise returns `u`
   /// \group value_or
@@ -1169,15 +1053,14 @@ public:
       this->m_has_value = false;
     }
   }
-
-
 };
 
 /// \group relop
 /// \brief Compares two optional objects
-/// \details If both optionals contain a value, they are compared with `T`s relational operators.
-/// Otherwise `lhs` and `rhs` are equal only if they are both empty, and `lhs` is less than `rhs`
-/// only if `rhs` is empty and `lhs` is not.
+/// \details If both optionals contain a value, they are compared with `T`s
+/// relational operators. Otherwise `lhs` and `rhs` are equal only if they are
+/// both empty, and `lhs` is less than `rhs` only if `rhs` is empty and `lhs` is
+/// not.
 template <class T, class U>
 inline constexpr bool operator==(const optional<T> &lhs,
                                  const optional<U> &rhs) {
@@ -1279,11 +1162,11 @@ inline constexpr bool operator>=(nullopt_t, const optional<T> &rhs) noexcept {
   return !rhs.has_value();
 }
 
-
 /// \group relop_t
 /// \brief Compares the optional with a value.
-/// \details If the optional has a value, it is compared with the other value using `T`s relational operators.
-/// Otherwise, the optional is considered less than the value.
+/// \details If the optional has a value, it is compared with the other value
+/// using `T`s relational operators. Otherwise, the optional is considered less
+/// than the value.
 template <class T, class U>
 inline constexpr bool operator==(const optional<T> &lhs, const U &rhs) {
   return lhs.has_value() ? *lhs == rhs : false;
@@ -1370,6 +1253,59 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
 #if __cplusplus >= 201703L
 template <class T> optional(T)->optional<T>;
 #endif
+
+/// \exclude
+namespace detail {
+#ifdef TL_OPTIONAL_CX14
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+auto map_impl(Opt &&opt, F &&f) {
+  return opt.has_value()
+             ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
+             : optional<Ret>(nullopt);
+}
+
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+auto map_impl(Opt &&opt, F &&f) {
+  if (opt.has_value()) {
+    detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
+    return monostate{};
+  }
+
+  return optional<Ret>(nullopt);
+}
+#else
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+
+auto map_impl(Opt &&opt, F &&f) -> optional<Ret> {
+  return opt.has_value()
+             ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
+             : optional<Ret>(nullopt);
+}
+
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+
+auto map_impl(Opt &&opt, F &&f) -> optional<monostate> {
+  if (opt.has_value()) {
+    detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
+    return monostate{};
+  }
+
+  return nullopt;
+}
+#endif
+} // namespace detail
 
 } // namespace tl
 
