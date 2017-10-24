@@ -459,11 +459,11 @@ public:
   /// `*this` is empty, otherwise an `optional<U>` is constructed from the
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
   /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
-  template <class F> constexpr auto map(F &&f) & {
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) & {
     return map_impl(*this, std::forward<F>(f));
   }
 
-  template <class F> constexpr auto map(F &&f) && {
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
 
