@@ -128,34 +128,16 @@ TEST_CASE("Monadic operations", "[monadic]") {
     constexpr auto o16r = o16.map(get_int);
     STATIC_REQUIRE(*o16r == 42);
 
-    constexpr tl::optional<int> o18 = 42;
-    constexpr auto opt_int = tl::make_optional(get_int);
-    constexpr auto o18r = o18.map(opt_int);
-    STATIC_REQUIRE(*o18r == 42);
-
     constexpr tl::optional<int> o20 = 42;
     constexpr auto o20r = std::move(o20).map(get_int);
     STATIC_REQUIRE(*o20r == 42);
 
-    constexpr tl::optional<int> o22 = 42;
-    constexpr auto o22r = std::move(o22).map(opt_int);
-    STATIC_REQUIRE(*o22r == 42);
-
     constexpr tl::optional<int> o32 = tl::nullopt;
     constexpr auto o32r = o32.map(get_int);
     STATIC_REQUIRE(!o32r);
-
-    constexpr tl::optional<int> o34 = tl::nullopt;
-    constexpr auto o34r = o34.map(opt_int);
-    STATIC_REQUIRE(!o34r);
-
     constexpr tl::optional<int> o36 = tl::nullopt;
     constexpr auto o36r = std::move(o36).map(get_int);
     STATIC_REQUIRE(!o36r);
-
-    constexpr tl::optional<int> o38 = tl::nullopt;
-    constexpr auto o38r = std::move(o38).map(opt_int);
-    STATIC_REQUIRE(!o38r);
 #endif
   }
 

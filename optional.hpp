@@ -337,6 +337,9 @@ template <class T> class optional : private detail::optional_storage_base<T> {
   using base = detail::optional_storage_base<T>;
 
 public:
+// The different versions for C++14 and 11 are needed because deduced return
+// types are not SFINAE-safe. C.f.
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0826r0.html
 #ifdef TL_OPTIONAL_CXX14
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
@@ -456,23 +459,21 @@ public:
   /// `*this` is empty, otherwise an `optional<U>` is constructed from the
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
   /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
-  template <class F> auto map(F &&f) & {
+  template <class F> constexpr auto map(F &&f) & {
     return map_impl(*this, std::forward<F>(f));
   }
 
-  template <class F> auto map(F &&f) && {
+  template <class F> constexpr auto map(F &&f) && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
 
-  template <class F> auto map(F &&f) const & {
+  template <class F> constexpr auto map(F &&f) const & {
     return map_impl(*this, std::forward<F>(f));
   }
 
-#ifndef TL_OPTIONAL_NO_CONSTRR
-  template <class F> auto map(F &&f) const && {
+  template <class F> constexpr auto map(F &&f) const && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
-#endif
 #else
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
@@ -481,26 +482,30 @@ public:
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
   /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
   template <class F>
-  decltype(map_impl(std::declval<optional &>(), std::declval<F &&>()))
+  TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &>(),
+                                             std::declval<F &&>()))
   map(F &&f) & {
     return map_impl(*this, std::forward<F>(f));
   }
 
   template <class F>
-  decltype(map_impl(std::declval<optional &&>(), std::declval<F &&>()))
+  TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &&>(),
+                                             std::declval<F &&>()))
   map(F &&f) && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
 
   template <class F>
-  decltype(map_impl(std::declval<const optional &>(), std::declval<F &&>()))
+  constexpr decltype(map_impl(std::declval<const optional &>(),
+                              std::declval<F &&>()))
   map(F &&f) const & {
     return map_impl(*this, std::forward<F>(f));
   }
 
 #ifndef TL_OPTIONAL_NO_CONSTRR
   template <class F>
-  decltype(map_impl(std::declval<const optional &&>(), std::declval<F &&>()))
+  constexpr decltype(map_impl(std::declval<const optional &&>(),
+                              std::declval<F &&>()))
   map(F &&f) const && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
@@ -1316,7 +1321,7 @@ template <class Opt, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Opt>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
-auto map_impl(Opt &&opt, F &&f) {
+constexpr auto map_impl(Opt &&opt, F &&f) {
   return opt.has_value()
              ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
              : optional<Ret>(nullopt);
@@ -1340,7 +1345,7 @@ template <class Opt, class F,
                                               *std::declval<Opt>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 
-auto map_impl(Opt &&opt, F &&f) -> optional<Ret> {
+constexpr auto map_impl(Opt &&opt, F &&f) -> optional<Ret> {
   return opt.has_value()
              ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
              : optional<Ret>(nullopt);
