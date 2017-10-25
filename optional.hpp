@@ -28,8 +28,8 @@
 #define TL_OPTIONAL_GCC49
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ == 0)
-#define TL_OPTIONAL_GCC50
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
+#define TL_OPTIONAL_GCC54
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
