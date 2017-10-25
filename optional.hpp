@@ -29,16 +29,8 @@
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
-#define TL_OPTIONAL_GCC54 1
-#else
-#define TL_OPTIONAL_GCC54 2
+#define TL_OPTIONAL_GCC54
 #endif
-
-template <int> struct TC;
-TC<__GNUC__> debug_1;
-TC<__GNUC_MINOR__> debug_2;
-TC<TL_OPTIONAL_GCC54> debug_3;
-
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
 #define TL_OPTIONAL_NO_CONSTRR

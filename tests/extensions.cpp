@@ -11,6 +11,8 @@
 constexpr int get_int(int) { return 42; }
 TL_OPTIONAL_11_CONSTEXPR tl::optional<int> get_opt_int(int) { return 42; }
 
+template <int> struct TC;
+
 // What is Clang Format up to?!
 TEST_CASE("Monadic operations", "[monadic]") {
   SECTION("map") { // lhs is empty
@@ -122,8 +124,17 @@ TEST_CASE("Monadic operations", "[monadic]") {
   }
 
   SECTION("map constexpr") {
+#if !defined(TL_OPTIONAL_GCC54)
+    constexpr int i = 0;
+#else
+    constexpr int i = 1;
+#endif
+
 #if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49) &&                       \
     !defined(TL_OPTIONAL_GCC54)
+
+    TC<i>{};
+
     // test each overload in turn
     constexpr tl::optional<int> o16 = 42;
     constexpr auto o16r = o16.map(get_int);
