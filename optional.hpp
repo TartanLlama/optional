@@ -42,7 +42,7 @@
 
 #if (__cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) ||                \
      defined(TL_OPTIONAL_GCC49)) &&                                            \
-    !defined(TL_OPTIONAL_GCC50)
+    !defined(TL_OPTIONAL_GCC54)
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
@@ -345,7 +345,7 @@ public:
 // The different versions for C++14 and 11 are needed because deduced return
 // types are not SFINAE-safe. C.f.
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0826r0.html
-#ifdef TL_OPTIONAL_CXX14
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && !defined(TL_EXPECTED_GCC54)
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
@@ -457,7 +457,7 @@ public:
 #endif
 #endif
 
-#ifdef TL_OPTIONAL_CXX14
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && !defined(TL_EXPECTED_GCC54)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
   /// value())`. Returns a `std::optional<U>`. The return value is empty if
