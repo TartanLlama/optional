@@ -321,11 +321,9 @@ template <class T> struct optional_storage_base<T, true> {
 template <class T> struct optional_operations_base : optional_storage_base<T> {
   using optional_storage_base<T>::optional_storage_base;
 
-  void reset() noexcept {
-    if (this->m_has_value) {
-      get().~T();
-      this->m_has_value = false;
-    }
+  void hard_reset() noexcept {
+    get().~T();
+    this->m_has_value = false;
   }
 
   template <class... Args> void construct(Args &&... args) noexcept {
@@ -334,8 +332,8 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
   }
 
   template <class Opt> void assign(Opt &&rhs) {
-    if (this->m_has_value) {
-      if (rhs.m_has_value) {
+    if (this->has_value()) {
+      if (rhs.has_value()) {
           this->m_value = std::forward<Opt>(rhs).get();
       } else {
         this->m_value.~T();
@@ -343,10 +341,12 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
       }
     }
 
-    if (rhs.m_has_value) {
+    if (rhs.has_value()) {
         construct(std::forward<Opt>(rhs).get());
     }
   }
+
+    bool has_value() const { return this->m_has_value; }
 
   TL_OPTIONAL_11_CONSTEXPR T &get() & { return this->m_value; }
   TL_OPTIONAL_11_CONSTEXPR const T &get() const & { return this->m_value; }
@@ -367,10 +367,10 @@ struct optional_copy_base<T, false> : optional_operations_base<T> {
 
   optional_copy_base() = default;
   optional_copy_base(const optional_copy_base &rhs) {
-    if (rhs.m_has_value) {
+    if (rhs.has_value()) {
       this->construct(rhs.get());
     } else {
-      this->reset();
+      this->hard_reset();
     }
   }
 
@@ -397,10 +397,10 @@ template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
 
   optional_move_base(optional_move_base &&rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value) {
-    if (rhs.m_has_value) {
+    if (rhs.has_value()) {
       this->construct(std::move(rhs.get()));
     } else {
-      this->reset();
+      this->hard_reset();
     }
   }
   optional_move_base &operator=(const optional_move_base &rhs) = default;
@@ -1025,8 +1025,7 @@ public:
                                                 Args &&...>::value,
                           in_place_t>,
       std::initializer_list<U> il, Args &&... args) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
+      this->construct(il, std::forward<Args>(args)...);
   }
 
   /// Constructs the stored value with `u`.
@@ -1050,8 +1049,7 @@ public:
       class U, detail::enable_from_other<T, U, const U &> * = nullptr,
       detail::enable_if_t<std::is_convertible<const U &, T>::value> * = nullptr>
   optional(const optional<U> &rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(*rhs);
+      this->construct(*rhs);
   }
 
   /// \exclude
@@ -1059,8 +1057,7 @@ public:
             detail::enable_if_t<!std::is_convertible<const U &, T>::value> * =
                 nullptr>
   explicit optional(const optional<U> &rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(*rhs);
+      this->construct(*rhs);
   }
 
   /// Converting move constructor.
@@ -1069,8 +1066,7 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr>
   optional(optional<U> &&rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(std::move(*rhs));
+      this->construct(std::move(*rhs));
   }
 
   /// \exclude
@@ -1078,8 +1074,7 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr>
   explicit optional(optional<U> &&rhs) {
-    this->m_has_value = true;
-    new (std::addressof(this->m_value)) T(std::move(*rhs));
+      this->construct(std::move(*rhs));
   }
 
   /// Destroys the stored value if there is one.
@@ -1117,8 +1112,7 @@ public:
     if (has_value()) {
       this->m_value = std::forward<U>(u);
     } else {
-      new (std::addressof(this->m_value)) T(std::forward<U>(u));
-      this->m_has_value = true;
+        this->construct(std::forward<U>(u));
     }
 
     return *this;
@@ -1136,14 +1130,12 @@ public:
       if (rhs.has_value()) {
         this->m_value = *rhs;
       } else {
-        this->m_value.~T();
-        this->m_has_value = false;
+          this->hard_reset();
       }
     }
 
     if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(*rhs);
-      this->m_has_value = true;
+        this->construct(*rhs);
     }
 
     return *this;
@@ -1160,14 +1152,12 @@ public:
       if (rhs.has_value()) {
         this->m_value = std::move(*rhs);
       } else {
-        this->m_value.~T();
-        this->m_has_value = false;
+          this->hard_reset();
       }
     }
 
     if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(std::move(*rhs));
-      this->m_has_value = true;
+        this->construct(std::move(*rhs));
     }
 
     return *this;
@@ -1209,7 +1199,7 @@ public:
         using std::swap;
         swap(**this, *rhs);
       } else {
-        new (&rhs.m_value) T(std::move(this->m_value));
+          new (std::addressof(rhs.m_value)) T(std::move(this->m_value));
         this->m_value.T::~T();
       }
     } else if (rhs.has_value()) {
