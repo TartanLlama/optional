@@ -39,6 +39,16 @@
 #define TL_OPTIONAL_NO_CONSTRR
 #endif
 
+#if __GNUG__ && __GNUC__ < 5
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::has_trivial_copy_constructor<T>::value
+#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
+#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
+#else
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::is_trivially_copy_constructible<T>::value
+#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::is_trivially_copy_assignable<T>::value
+#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
+#endif
+
 #if __cplusplus > 201103L
 #define TL_OPTIONAL_CXX14
 #endif
@@ -326,8 +336,15 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
   template <class Opt> void assign(Opt &&rhs) {
     if (this->m_has_value) {
       if (rhs.m_has_value) {
-        get() = std::forward<Opt>(rhs).get();
+          this->m_value = std::forward<Opt>(rhs).get();
+      } else {
+        this->m_value.~T();
+        this->m_has_value = false;
       }
+    }
+
+    if (rhs.m_has_value) {
+        construct(std::forward<Opt>(rhs).get());
     }
   }
 
@@ -339,7 +356,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
 #endif
 };
 
-template <class T, bool = std::is_trivially_copy_constructible<T>::value>
+    template <class T, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
 struct optional_copy_base : optional_operations_base<T> {
   using optional_operations_base<T>::optional_operations_base;
 };
@@ -362,11 +379,16 @@ struct optional_copy_base<T, false> : optional_operations_base<T> {
   optional_copy_base &operator=(optional_copy_base &&rhs) = default;
 };
 
+
+#ifndef TL_OPTIONAL_GCC49
 template <class T, bool = std::is_trivially_move_constructible<T>::value>
 struct optional_move_base : optional_copy_base<T> {
   using optional_copy_base<T>::optional_copy_base;
 };
-
+#else
+    template <class T, bool = false>
+    struct optional_move_base;
+    #endif
 template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
   using optional_copy_base<T>::optional_copy_base;
 
@@ -385,7 +407,7 @@ template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
   optional_move_base &operator=(optional_move_base &&rhs) = default;
 };
 
-template <class T, bool = std::is_trivially_copy_constructible<T>::value>
+    template <class T, bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_DESTRUCTIBLE(T)>
 struct optional_copy_assign_base : optional_move_base<T> {
   using optional_move_base<T>::optional_move_base;
 };
@@ -399,23 +421,25 @@ struct optional_copy_assign_base<T, false> : optional_move_base<T> {
 
   optional_copy_assign_base(optional_copy_assign_base &&rhs) = default;
   optional_copy_assign_base &operator=(const optional_copy_assign_base &rhs) {
-    if (rhs.m_has_value) {
-      this->assign(rhs.get());
-    } else {
-      this->reset();
-    }
+      this->assign(rhs);
   }
   optional_copy_assign_base &
   operator=(optional_copy_assign_base &&rhs) = default;
 };
 
-template <class T, bool = std::is_trivially_copy_constructible<T>::value>
+
+#ifndef TL_OPTIONAL_GCC49
+template <class T, bool = std::is_trivially_destructible<T>::value && std::is_trivially_move_constructible<T>::value && std::is_trivially_move_assignable<T>::value>
 struct optional_move_assign_base : optional_copy_assign_base<T> {
   using optional_copy_assign_base<T>::optional_copy_assign_base;
 };
+#else
+    template <class T, bool = false>
+    struct optional_move_assign_base;
+#endif
 
-template <class T>
-struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
+    template <class T>
+    struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
   using optional_copy_assign_base<T>::optional_copy_assign_base;
 
   optional_move_assign_base() = default;
@@ -426,11 +450,8 @@ struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
   operator=(const optional_move_assign_base &rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
-    if (rhs.m_has_value) {
-      this->assign(std::move(rhs.get()));
-    } else {
-      this->reset();
-    }
+      this->assign(std::move(rhs));
+
   }
   optional_move_assign_base &
   operator=(optional_move_assign_base &&rhs) = default;
