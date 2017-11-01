@@ -122,8 +122,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
   }
 
   SECTION("map constexpr") {
-#if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49) &&                       \
-    !defined(TL_OPTIONAL_GCC54)
+#if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49)
     // test each overload in turn
     constexpr tl::optional<int> o16 = 42;
     constexpr auto o16r = o16.map(get_int);
@@ -233,8 +232,8 @@ TEST_CASE("Monadic operations", "[monadic]") {
   }
 
   SECTION("constexpr and_then") {
-#if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49) &&                       \
-    !defined(TL_OPTIONAL_GCC54)
+#if !defined(_MSC_VER) && !defined(TL_OPTIONAL_GCC49)
+
     constexpr tl::optional<int> o10 = 42;
     constexpr auto o10r = o10.and_then(get_opt_int);
     REQUIRE(*o10r == 42);
@@ -318,7 +317,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
     void non_const() {}
   };
 
-#ifdef TL_OPTIONAL_CXX14
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && !defined(TL_EXPECTED_GCC54)
   SECTION("Issue #1") {
     tl::optional<foo> f = foo{};
     auto l = [](auto &&x) { x.non_const(); };
