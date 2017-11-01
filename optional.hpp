@@ -368,7 +368,7 @@ struct optional_copy_base<T, false> : optional_operations_base<T> {
     if (rhs.has_value()) {
       this->construct(rhs.get());
     } else {
-      this->hard_reset();
+      this->m_has_value = false;
     }
   }
 
@@ -398,7 +398,7 @@ template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
     if (rhs.has_value()) {
       this->construct(std::move(rhs.get()));
     } else {
-      this->hard_reset();
+        this->m_has_value = false;
     }
   }
   optional_move_base &operator=(const optional_move_base &rhs) = default;
