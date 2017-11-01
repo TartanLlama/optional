@@ -1,6 +1,20 @@
 # Header file `optional.hpp`<a id="optional.hpp"></a>
 
-<pre><code class="language-cpp">namespace <a href='doc_optional.md#optional.hpp'>tl</a>
+<pre><code class="language-cpp">#define <a href='doc_optional.md#optional.hpp'>TL_OPTIONAL_HPP</a>
+
+#define <a href='doc_optional.md#optional.hpp'>TL_OPTIONAL_VERSION_MAJOR</a>
+
+#define <a href='doc_optional.md#optional.hpp'>TL_OPTIONAL_VERSION_MINOR</a>
+
+#define <a href='doc_optional.md#optional.hpp'>IS_TRIVIALLY_COPY_CONSTRUCTIBLE</a>(T)
+
+#define <a href='doc_optional.md#optional.hpp'>IS_TRIVIALLY_COPY_ASSIGNABLE</a>(T)
+
+#define <a href='doc_optional.md#optional.hpp'>IS_TRIVIALLY_DESTRUCTIBLE</a>(T)
+
+#define <a href='doc_optional.md#optional.hpp'>TL_OPTIONAL_CXX14</a>
+
+namespace <a href='doc_optional.md#optional.hpp'>tl</a>
 {
     class <a href='doc_optional.md#tl::monostate'>monostate</a>;
     
@@ -160,8 +174,8 @@ public:
     
     template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;;
     template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;&amp;;
-    template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;;
-    template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;&amp;;
+    template &lt;class F&gt; auto map(F &amp;&amp;f) const&amp;;
+    template &lt;class F&gt; auto map(F &amp;&amp;f) const&amp;&amp;;
     
     template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) &amp;;
     template &lt;class F&gt; optional&lt;T&gt; or_else (F &amp;&amp;f) &amp;&amp;;
@@ -207,9 +221,9 @@ public:
     constexpr <a href='doc_optional.md#tl::optional-T-::optional()'>optional</a>() noexcept = default;
     constexpr <a href='doc_optional.md#tl::optional-T-::optional()'>optional</a>(<a href='doc_optional.md#tl::nullopt_t'>nullopt_t</a>) noexcept;
     
-    constexpr <a href='doc_optional.md#tl::optional-T-::optional(constoptional-T-&)'>optional</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs);
+    constexpr <a href='doc_optional.md#tl::optional-T-::optional(constoptional-T-&)'>optional</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) = default;
     
-    constexpr <a href='doc_optional.md#tl::optional-T-::optional(optional-T-&&)'>optional</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) noexcept(std::is_nothrow_move_constructible&lt;T&gt;::value);
+    constexpr <a href='doc_optional.md#tl::optional-T-::optional(optional-T-&&)'>optional</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) = default;
     
     template &lt;class... Args&gt; constexpr explicit optional(in_place_t, Args&amp;&amp;... args);
     template &lt;class U, class... Args&gt;
@@ -225,9 +239,9 @@ public:
     
     <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; <a href='doc_optional.md#tl::optional-T-::operator=(tl::nullopt_t)'>operator=</a>(<a href='doc_optional.md#tl::nullopt_t'>nullopt_t</a>) noexcept;
     
-    <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; <a href='doc_optional.md#tl::optional-T-::operator=(constoptional-T-&)'>operator=</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs);
+    <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; <a href='doc_optional.md#tl::optional-T-::operator=(constoptional-T-&)'>operator=</a>(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) = default;
     
-    <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; <a href='doc_optional.md#tl::optional-T-::operator=(optional-T-&&)'>operator=</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) noexcept(std::is_nothrow_move_assignable&lt;T&gt;::value&amp;&amp;std::is_nothrow_move_constructible&lt;T&gt;::value);
+    <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; <a href='doc_optional.md#tl::optional-T-::operator=(optional-T-&&)'>operator=</a>(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) = default;
     
     optional &amp;operator=(U &amp;&amp;u);
     
@@ -251,7 +265,7 @@ public:
     constexpr bool <a href='doc_optional.md#tl::optional-T-::has_value()const'>has_value</a>() const noexcept;
     constexpr <a href='doc_optional.md#tl::optional-T-::has_value()const'>operator bool</a>() const noexcept;
     
-    constexpr T &amp;value();
+    constexpr T&amp; <a href='doc_optional.md#tl::optional-T-::value()&'>value</a>() &amp;;
     constexpr const T &amp;value() const;
     
     template &lt;class U&gt;
@@ -280,9 +294,7 @@ An optional object is an object that contains the storage for another object and
 
 Carries out some operation which returns an optional on the stored object if there is one.
 
-*Requires*: `std::invoke(std::forward<F>(f), value())` returns a `std::optional<U>` for some `U`.
-
-*Returns*: Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
+*Requires*: `std::invoke(std::forward<F>(f), value())` returns a `std::optional<U>` for some `U`. \\returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::optional<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
 
 ### Function template `tl::optional::map`<a id="tl::optional-T-::map(F&&)&"></a>
 
@@ -290,9 +302,9 @@ Carries out some operation which returns an optional on the stored object if the
 
 (2)  template &lt;class F&gt; auto map(F &amp;&amp;f) &amp;&amp;;
 
-(3)  template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;;
+(3)  template &lt;class F&gt; auto map(F &amp;&amp;f) const&amp;;
 
-(4)  template &lt;class F&gt; auto map(F &amp;&amp;f) const &amp;&amp;;</code></pre>
+(4)  template &lt;class F&gt; auto map(F &amp;&amp;f) const&amp;&amp;;</code></pre>
 
 Carries out some operation on the stored object if there is one.
 
@@ -308,9 +320,7 @@ Carries out some operation on the stored object if there is one.
 
 Calls `f` if the optional is empty
 
-*Requires*: `std::invoke_result_t<F>` must be void or convertible to `optional<T>`.
-
-*Effects*: If `*this` has a value, returns `*this`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
+*Requires*: `std::invoke_result_t<F>` must be void or convertible to `optional<T>`. \\effects If `*this` has a value, returns `*this`. Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
 
 ### Function template `tl::optional::map_or`<a id="tl::optional-T-::map_or(F&&,U&&)&"></a>
 
@@ -326,7 +336,7 @@ Calls `f` if the optional is empty
 (4)  template &lt;class F, class U&gt;
      U map_or(F&amp;&amp; f, U&amp;&amp; u) const &amp;&amp;;</code></pre>
 
-Maps the stored value with `f` if there is one, otherwise returns `u`
+Maps the stored value with `f` if there is one, otherwise returns `u`.
 
 If there is a value stored, then `f` is called with `**this` and the value is returned. Otherwise `u` is returned.
 
@@ -397,7 +407,7 @@ Constructs an optional that does not contain a value.
 
 ### Constructor `tl::optional::optional`<a id="tl::optional-T-::optional(constoptional-T-&)"></a>
 
-<pre><code class="language-cpp">constexpr optional(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs);</code></pre>
+<pre><code class="language-cpp">constexpr optional(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) = default;</code></pre>
 
 Copy constructor
 
@@ -405,7 +415,7 @@ If `rhs` contains a value, the stored value is direct-initialized with it. Other
 
 ### Constructor `tl::optional::optional`<a id="tl::optional-T-::optional(optional-T-&&)"></a>
 
-<pre><code class="language-cpp">constexpr optional(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) noexcept(std::is_nothrow_move_constructible&lt;T&gt;::value);</code></pre>
+<pre><code class="language-cpp">constexpr optional(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) = default;</code></pre>
 
 Move constructor
 
@@ -454,7 +464,7 @@ Destroys the current value if there is one.
 
 ### Assignment operator `tl::optional::operator=`<a id="tl::optional-T-::operator=(constoptional-T-&)"></a>
 
-<pre><code class="language-cpp"><a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; operator=(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs);</code></pre>
+<pre><code class="language-cpp"><a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; operator=(const <a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; rhs) = default;</code></pre>
 
 Copy assignment.
 
@@ -462,7 +472,7 @@ Copies the value from `rhs` if there is one. Otherwise resets the stored value i
 
 ### Assignment operator `tl::optional::operator=`<a id="tl::optional-T-::operator=(optional-T-&&)"></a>
 
-<pre><code class="language-cpp"><a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; operator=(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) noexcept(std::is_nothrow_move_assignable&lt;T&gt;::value&amp;&amp;std::is_nothrow_move_constructible&lt;T&gt;::value);</code></pre>
+<pre><code class="language-cpp"><a href='doc_optional.md#tl::optional-T-'>optional</a>&amp; operator=(<a href='doc_optional.md#tl::optional-T-'>optional</a>&amp;&amp; rhs) = default;</code></pre>
 
 Move assignment.
 
@@ -538,11 +548,13 @@ If neither optionals have a value, nothing happens. If both have a value, the va
 
 ### Function `tl::optional::value`<a id="tl::optional-T-::value()&"></a>
 
-<pre><code class="language-cpp">(1)  constexpr T &amp;value();
+<pre><code class="language-cpp">(1)  constexpr T&amp; value() &amp;;
 
 (2)  constexpr const T &amp;value() const;</code></pre>
 
 *Returns*: the contained value if there is one, otherwise throws \[bad\_optional\_access\]
+
+synopsis constexpr T \&value();
 
 ### Function template `tl::optional::value_or`<a id="tl::optional-T-::value_or(U&&)const&"></a>
 
