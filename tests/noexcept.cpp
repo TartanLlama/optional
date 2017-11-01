@@ -63,8 +63,8 @@ TEST_CASE("Noexcept", "[noexcept]") {
     using nothrow_opt = tl::optional<nothrow_move>;
     using throw_opt = tl::optional<throw_move>;
 
-    REQUIRE(noexcept(nothrow_opt{std::declval<nothrow_opt>()}));
-    REQUIRE(!noexcept(throw_opt{std::declval<throw_opt>()}));
+    REQUIRE(std::is_nothrow_move_constructible<nothrow_opt>::value);
+    REQUIRE(!std::is_nothrow_move_constructible<throw_opt>::value);
 #endif
   }
 

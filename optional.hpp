@@ -271,11 +271,6 @@ struct optional_storage_base {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
 
-  optional_storage_base(const optional_storage_base &) = default;
-  optional_storage_base(optional_storage_base &&) noexcept = default;
-  optional_storage_base &operator=(const optional_storage_base &) = default;
-  optional_storage_base &operator=(optional_storage_base &&) noexcept = default;
-
   template <class... U>
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u)
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
@@ -300,16 +295,9 @@ template <class T> struct optional_storage_base<T, true> {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
 
-  optional_storage_base(const optional_storage_base &) = default;
-  optional_storage_base(optional_storage_base &&) noexcept = default;
-  optional_storage_base &operator=(const optional_storage_base &) = default;
-  optional_storage_base &operator=(optional_storage_base &&) noexcept = default;
-
   template <class... U>
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u)
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
-
-  ~optional_storage_base() = default;
 
   struct dummy {};
   union {
@@ -995,7 +983,7 @@ public:
   ///
   /// If `rhs` contains a value, the stored value is direct-initialized with it.
   /// Otherwise, the constructed optional is empty.
-  TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) = default;
+    TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) = default;
 
   /// Constructs the stored value in-place using the given arguments.
   /// \group in_place
@@ -1098,9 +1086,7 @@ public:
   ///
   /// Moves the value from `rhs` if there is one. Otherwise resets the stored
   /// value in `*this`.
-  optional &operator=(optional &&rhs) noexcept(
-      std::is_nothrow_move_assignable<T>::value
-          &&std::is_nothrow_move_constructible<T>::value) = default;
+  optional &operator=(optional &&rhs) = default;
 
   // TODO conditionally delete, check exception guarantee
   /// Assigns the stored value from `u`, destroying the old value if there was
