@@ -27,19 +27,17 @@
 #define TL_OPTIONAL_MSVC2015
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 && !defined(__clang__))
 #define TL_OPTIONAL_GCC49
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4 && !defined(__clang__))
 #define TL_OPTIONAL_GCC54
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 && !defined(__clang__))
 #define TL_OPTIONAL_NO_CONSTRR
-#endif
 
-#if __GNUG__ && __GNUC__ < 5
 #define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::has_trivial_copy_constructor<T>::value
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
