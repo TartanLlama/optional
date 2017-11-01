@@ -613,13 +613,15 @@ public:
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && !defined(TL_EXPECTED_GCC54)
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
-  /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
+  /// if there is one.
+  /// \requires `std::invoke(std::forward<F>(f), value())`
   /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
   /// `std::optional<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
-  /// and_then(F &&f) &;
+  /// is returned.
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T &>;
     static_assert(detail::is_optional<result>::value,
@@ -666,13 +668,15 @@ public:
 #else
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
-  /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
+  /// if there is one.
+  /// \requires `std::invoke(std::forward<F>(f), value())`
   /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
   /// `std::optional<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
-  /// and_then(F &&f) &;
+  /// is returned.
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F>
   TL_OPTIONAL_11_CONSTEXPR detail::invoke_result_t<F, T &> and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T &>;
@@ -931,8 +935,7 @@ public:
   }
 
   /// \group map_or_else
-  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u)
-  /// const &;
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &;
   template <class F, class U>
   detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
@@ -1047,7 +1050,6 @@ public:
   /// Otherwise, the constructed optional is empty.
   TL_OPTIONAL_11_CONSTEXPR optional(const optional &rhs) = default;
 
-  // TODO conditionally disable
   /// Move constructor
   ///
   /// If `rhs` contains a value, the stored value is direct-initialized with it.
@@ -1056,8 +1058,7 @@ public:
 
   /// Constructs the stored value in-place using the given arguments.
   /// \group in_place
-  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t,
-  /// Args&&... args);
+  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t, Args&&... args);
   template <class... Args>
   constexpr explicit optional(
       detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
@@ -1065,8 +1066,7 @@ public:
       : base(in_place, std::forward<Args>(args)...) {}
 
   /// \group in_place
-  /// \synopsis template <class U, class... Args>\nconstexpr explicit
-  /// optional(in_place_t, std::initializer_list<U>&, Args&&... args);
+  /// \synopsis template <class U, class... Args>\nconstexpr explicit optional(in_place_t, std::initializer_list<U>&, Args&&... args);
   template <class U, class... Args>
   TL_OPTIONAL_11_CONSTEXPR explicit optional(
       detail::enable_if_t<std::is_constructible<T, std::initializer_list<U> &,
@@ -1152,9 +1152,9 @@ public:
   /// value in `*this`.
   optional &operator=(optional &&rhs) = default;
 
-  // TODO conditionally delete, check exception guarantee
   /// Assigns the stored value from `u`, destroying the old value if there was
-  /// one. \synopsis optional &operator=(U &&u);
+  /// one.
+  /// \synopsis optional &operator=(U &&u);
   template <class U = T, detail::enable_assign_forward<T, U> * = nullptr>
   optional &operator=(U &&u) {
     if (has_value()) {
@@ -1166,11 +1166,11 @@ public:
     return *this;
   }
 
-  // TODO check exception guarantee
   /// Converting copy assignment operator.
   ///
   /// Copies the value from `rhs` if there is one. Otherwise resets the stored
-  /// value in `*this`. \synopsis optional &operator=(const optional<U> & rhs);
+  /// value in `*this`.
+  /// \synopsis optional &operator=(const optional<U> & rhs);
   template <class U,
             detail::enable_assign_from_other<T, U, const U &> * = nullptr>
   optional &operator=(const optional<U> &rhs) {
@@ -1193,7 +1193,8 @@ public:
   /// Converting move assignment operator.
   ///
   /// Moves the value from `rhs` if there is one. Otherwise resets the stored
-  /// value in `*this`. \synopsis optional &operator=(optional<U> && rhs);
+  /// value in `*this`.
+  /// \synopsis optional &operator=(optional<U> && rhs);
   template <class U, detail::enable_assign_from_other<T, U, U> * = nullptr>
   optional &operator=(optional<U> &&rhs) {
     if (has_value()) {
@@ -1222,8 +1223,7 @@ public:
   }
 
   /// \group emplace
-  /// \synopsis template <class U, class... Args>\nT&
-  /// emplace(std::initializer_list<U> il, Args &&... args);
+  /// \synopsis template <class U, class... Args>\nT& emplace(std::initializer_list<U> il, Args &&... args);
   template <class U, class... Args>
   detail::enable_if_t<
       std::is_constructible<T, std::initializer_list<U> &, Args &&...>::value,
@@ -1300,7 +1300,9 @@ public:
   }
 
   /// \returns the contained value if there is one, otherwise throws
-  /// [bad_optional_access] \group value \synopsis constexpr T &value();
+  /// [bad_optional_access]
+  /// \group value
+  /// synopsis constexpr T &value();
   TL_OPTIONAL_11_CONSTEXPR T &value() & {
     if (has_value())
       return this->m_value;
