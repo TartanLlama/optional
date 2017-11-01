@@ -268,8 +268,13 @@ struct optional_storage_base {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
 
+  optional_storage_base(const optional_storage_base &) = default;
+  optional_storage_base(optional_storage_base &&) noexcept = default;
+  optional_storage_base &operator=(const optional_storage_base &) = default;
+  optional_storage_base &operator=(optional_storage_base &&) noexcept = default;
+
   template <class... U>
-  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u)
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() {
@@ -292,8 +297,13 @@ template <class T> struct optional_storage_base<T, true> {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
 
+  optional_storage_base(const optional_storage_base &) = default;
+  optional_storage_base(optional_storage_base &&) noexcept = default;
+  optional_storage_base &operator=(const optional_storage_base &) = default;
+  optional_storage_base &operator=(optional_storage_base &&) noexcept = default;
+
   template <class... U>
-  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u) noexcept
+  TL_OPTIONAL_11_CONSTEXPR optional_storage_base(in_place_t, U &&... u)
       : m_value(std::forward<U>(u)...), m_has_value(true) {}
 
   ~optional_storage_base() = default;
@@ -305,6 +315,225 @@ template <class T> struct optional_storage_base<T, true> {
   };
 
   bool m_has_value = false;
+};
+
+template <class T> struct optional_operations_base : optional_storage_base<T> {
+  using optional_storage_base<T>::optional_storage_base;
+
+  void reset() noexcept {
+    if (this->m_has_value) {
+      get().~T();
+      this->m_has_value = false;
+    }
+  }
+
+  template <class... Args> void construct(Args &&... args) noexcept {
+    new (std::addressof(this->m_value)) T(std::forward<Args>(args)...);
+    this->m_has_value = true;
+  }
+
+  template <class Opt> void assign(Opt &&rhs) {
+    if (this->m_has_value) {
+      if (rhs.m_has_value) {
+        get() = std::forward<Opt>(rhs).get();
+      }
+    }
+  }
+
+  TL_OPTIONAL_11_CONSTEXPR T &get() & { return this->m_value; }
+  TL_OPTIONAL_11_CONSTEXPR const T &get() const & { return this->m_value; }
+  TL_OPTIONAL_11_CONSTEXPR T &&get() && { std::move(this->m_value); }
+#ifndef TL_OPTIONAL_NO_CONSTRR
+  constexpr const T &&get() const && { return std::move(this->m_value); }
+#endif
+};
+
+template <class T, bool = std::is_trivially_copy_constructible<T>::value>
+struct optional_copy_base : optional_operations_base<T> {
+  using optional_operations_base<T>::optional_operations_base;
+};
+
+template <class T>
+struct optional_copy_base<T, false> : optional_operations_base<T> {
+  using optional_operations_base<T>::optional_operations_base;
+
+  optional_copy_base() = default;
+  optional_copy_base(const optional_copy_base &rhs) {
+    if (rhs.m_has_value) {
+      this->construct(rhs.get());
+    } else {
+      this->reset();
+    }
+  }
+
+  optional_copy_base(optional_copy_base &&rhs) = default;
+  optional_copy_base &operator=(const optional_copy_base &rhs) = default;
+  optional_copy_base &operator=(optional_copy_base &&rhs) = default;
+};
+
+template <class T, bool = std::is_trivially_move_constructible<T>::value>
+struct optional_move_base : optional_copy_base<T> {
+  using optional_copy_base<T>::optional_copy_base;
+};
+
+template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
+  using optional_copy_base<T>::optional_copy_base;
+
+  optional_move_base() = default;
+  optional_move_base(const optional_move_base &rhs) = default;
+
+  optional_move_base(optional_move_base &&rhs) noexcept(
+      std::is_nothrow_move_constructible<T>::value) {
+    if (rhs.m_has_value) {
+      this->construct(std::move(rhs.get()));
+    } else {
+      this->reset();
+    }
+  }
+  optional_move_base &operator=(const optional_move_base &rhs) = default;
+  optional_move_base &operator=(optional_move_base &&rhs) = default;
+};
+
+template <class T, bool = std::is_trivially_copy_constructible<T>::value>
+struct optional_copy_assign_base : optional_move_base<T> {
+  using optional_move_base<T>::optional_move_base;
+};
+
+template <class T>
+struct optional_copy_assign_base<T, false> : optional_move_base<T> {
+  using optional_move_base<T>::optional_move_base;
+
+  optional_copy_assign_base() = default;
+  optional_copy_assign_base(const optional_copy_assign_base &rhs) = default;
+
+  optional_copy_assign_base(optional_copy_assign_base &&rhs) = default;
+  optional_copy_assign_base &operator=(const optional_copy_assign_base &rhs) {
+    if (rhs.m_has_value) {
+      this->assign(rhs.get());
+    } else {
+      this->reset();
+    }
+  }
+  optional_copy_assign_base &
+  operator=(optional_copy_assign_base &&rhs) = default;
+};
+
+template <class T, bool = std::is_trivially_copy_constructible<T>::value>
+struct optional_move_assign_base : optional_copy_assign_base<T> {
+  using optional_copy_assign_base<T>::optional_copy_assign_base;
+};
+
+template <class T>
+struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
+  using optional_copy_assign_base<T>::optional_copy_assign_base;
+
+  optional_move_assign_base() = default;
+  optional_move_assign_base(const optional_move_assign_base &rhs) = default;
+
+  optional_move_assign_base(optional_move_assign_base &&rhs) = default;
+  optional_move_assign_base &
+  operator=(const optional_move_assign_base &rhs) noexcept(
+      std::is_nothrow_move_constructible<T>::value
+          &&std::is_nothrow_move_assignable<T>::value) {
+    if (rhs.m_has_value) {
+      this->assign(std::move(rhs.get()));
+    } else {
+      this->reset();
+    }
+  }
+  optional_move_assign_base &
+  operator=(optional_move_assign_base &&rhs) = default;
+};
+
+template <class T, bool EnableCopy = std::is_copy_constructible<T>::value,
+          bool EnableMove = std::is_move_constructible<T>::value>
+struct optional_delete_ctor_base {
+  optional_delete_ctor_base() = default;
+  optional_delete_ctor_base(const optional_delete_ctor_base &) = default;
+  optional_delete_ctor_base(optional_delete_ctor_base &&) noexcept = default;
+  optional_delete_ctor_base &
+  operator=(const optional_delete_ctor_base &) = default;
+  optional_delete_ctor_base &
+  operator=(optional_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T> struct optional_delete_ctor_base<T, true, false> {
+  optional_delete_ctor_base() = default;
+  optional_delete_ctor_base(const optional_delete_ctor_base &) = default;
+  optional_delete_ctor_base(optional_delete_ctor_base &&) noexcept = delete;
+  optional_delete_ctor_base &
+  operator=(const optional_delete_ctor_base &) = default;
+  optional_delete_ctor_base &
+  operator=(optional_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T> struct optional_delete_ctor_base<T, false, true> {
+  optional_delete_ctor_base() = default;
+  optional_delete_ctor_base(const optional_delete_ctor_base &) = delete;
+  optional_delete_ctor_base(optional_delete_ctor_base &&) noexcept = default;
+  optional_delete_ctor_base &
+  operator=(const optional_delete_ctor_base &) = default;
+  optional_delete_ctor_base &
+  operator=(optional_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T> struct optional_delete_ctor_base<T, false, false> {
+  optional_delete_ctor_base() = default;
+  optional_delete_ctor_base(const optional_delete_ctor_base &) = delete;
+  optional_delete_ctor_base(optional_delete_ctor_base &&) noexcept = delete;
+  optional_delete_ctor_base &
+  operator=(const optional_delete_ctor_base &) = default;
+  optional_delete_ctor_base &
+  operator=(optional_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T,
+          bool EnableCopy = (std::is_copy_constructible<T>::value &&
+                             std::is_copy_assignable<T>::value),
+          bool EnableMove = (std::is_move_constructible<T>::value &&
+                             std::is_move_assignable<T>::value)>
+struct optional_delete_assign_base {
+  optional_delete_assign_base() = default;
+  optional_delete_assign_base(const optional_delete_assign_base &) = default;
+  optional_delete_assign_base(optional_delete_assign_base &&) noexcept =
+      default;
+  optional_delete_assign_base &
+  operator=(const optional_delete_assign_base &) = default;
+  optional_delete_assign_base &
+  operator=(optional_delete_assign_base &&) noexcept = default;
+};
+
+template <class T> struct optional_delete_assign_base<T, true, false> {
+  optional_delete_assign_base() = default;
+  optional_delete_assign_base(const optional_delete_assign_base &) = default;
+  optional_delete_assign_base(optional_delete_assign_base &&) noexcept =
+      default;
+  optional_delete_assign_base &
+  operator=(const optional_delete_assign_base &) = default;
+  optional_delete_assign_base &
+  operator=(optional_delete_assign_base &&) noexcept = delete;
+};
+
+template <class T> struct optional_delete_assign_base<T, false, true> {
+  optional_delete_assign_base() = default;
+  optional_delete_assign_base(const optional_delete_assign_base &) = default;
+  optional_delete_assign_base(optional_delete_assign_base &&) noexcept =
+      default;
+  optional_delete_assign_base &
+  operator=(const optional_delete_assign_base &) = delete;
+  optional_delete_assign_base &
+  operator=(optional_delete_assign_base &&) noexcept = default;
+};
+
+template <class T> struct optional_delete_assign_base<T, false, false> {
+  optional_delete_assign_base() = default;
+  optional_delete_assign_base(const optional_delete_assign_base &) = default;
+  optional_delete_assign_base(optional_delete_assign_base &&) noexcept =
+      default;
+  optional_delete_assign_base &
+  operator=(const optional_delete_assign_base &) = delete;
+  optional_delete_assign_base &
+  operator=(optional_delete_assign_base &&) noexcept = delete;
 };
 
 } // namespace detail
@@ -338,8 +567,11 @@ public:
 /// and may be destroyed before the optional object has been destroyed. The
 /// initialization state of the contained object is tracked by the optional
 /// object.
-template <class T> class optional : private detail::optional_storage_base<T> {
-  using base = detail::optional_storage_base<T>;
+template <class T>
+class optional : private detail::optional_move_assign_base<T>,
+                 private detail::optional_delete_ctor_base<T>,
+                 private detail::optional_delete_assign_base<T> {
+  using base = detail::optional_move_assign_base<T>;
 
 public:
 // The different versions for C++14 and 11 are needed because deduced return
@@ -753,25 +985,14 @@ public:
   ///
   /// If `rhs` contains a value, the stored value is direct-initialized with it.
   /// Otherwise, the constructed optional is empty.
-  TL_OPTIONAL_11_CONSTEXPR optional(const optional &rhs) {
-    if (rhs.has_value()) {
-      this->m_has_value = true;
-      new (std::addressof(this->m_value)) T(*rhs);
-    }
-  }
+  TL_OPTIONAL_11_CONSTEXPR optional(const optional &rhs) = default;
 
   // TODO conditionally disable
   /// Move constructor
   ///
   /// If `rhs` contains a value, the stored value is direct-initialized with it.
   /// Otherwise, the constructed optional is empty.
-  TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value) {
-    if (rhs.has_value()) {
-      this->m_has_value = true;
-      new (std::addressof(this->m_value)) T(std::move(*rhs));
-    }
-  }
+  TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) = default;
 
   /// Constructs the stored value in-place using the given arguments.
   /// \group in_place
@@ -864,53 +1085,19 @@ public:
     return *this;
   }
 
-  // TODO conditionally delete, check exception guarantee
   /// Copy assignment.
   ///
   /// Copies the value from `rhs` if there is one. Otherwise resets the stored
   /// value in `*this`.
-  optional &operator=(const optional &rhs) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        this->m_value = rhs.m_value;
-      } else {
-        this->m_value.~T();
-        this->m_has_value = false;
-      }
-    }
+  optional &operator=(const optional &rhs) = default;
 
-    if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(rhs.m_value);
-      this->m_has_value = true;
-    }
-
-    return *this;
-  }
-
-  // TODO conditionally delete, check exception guarantee
   /// Move assignment.
   ///
   /// Moves the value from `rhs` if there is one. Otherwise resets the stored
   /// value in `*this`.
   optional &operator=(optional &&rhs) noexcept(
       std::is_nothrow_move_assignable<T>::value
-          &&std::is_nothrow_move_constructible<T>::value) {
-    if (has_value()) {
-      if (rhs.has_value()) {
-        this->m_value = std::move(rhs.m_value);
-      } else {
-        this->m_value.~T();
-        this->m_has_value = false;
-      }
-    }
-
-    if (rhs.has_value()) {
-      new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
-      this->m_has_value = true;
-    }
-
-    return *this;
-  }
+          &&std::is_nothrow_move_constructible<T>::value) = default;
 
   // TODO conditionally delete, check exception guarantee
   /// Assigns the stored value from `u`, destroying the old value if there was
@@ -983,7 +1170,7 @@ public:
                   "T must be constructible with Args");
 
     *this = nullopt;
-    new (std::addressof(this->m_value)) T(std::forward<Args>(args)...);
+    this->construct(std::forward<Args>(args)...);
   }
 
   /// \group emplace
@@ -995,7 +1182,7 @@ public:
       T &>
   emplace(std::initializer_list<U> il, Args &&... args) {
     *this = nullopt;
-    new (std::addressof(this->m_value)) T(il, std::forward<Args>(args)...);
+    this->construct(il, std::forward<Args>(args)...);
   }
 
   /// Swaps this optional with the other.
@@ -1118,7 +1305,7 @@ public:
       this->m_has_value = false;
     }
   }
-};
+}; // namespace tl
 
 /// \group relop
 /// \brief Compares two optional objects
