@@ -27,28 +27,33 @@
 #define TL_OPTIONAL_MSVC2015
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 && !defined(__clang__))
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
+     !defined(__clang__))
 #define TL_OPTIONAL_GCC49
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4 && !defined(__clang__))
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4 &&              \
+     !defined(__clang__))
 #define TL_OPTIONAL_GCC54
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 && !defined(__clang__))
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
+     !defined(__clang__))
 // GCC < 5 doesn't support overloading on const&& for member functions
 #define TL_OPTIONAL_NO_CONSTRR
 
-
-//GCC < 5 doesn't support some standard C++11 type traits
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::has_trivial_copy_constructor<T>::value
+// GCC < 5 doesn't support some standard C++11 type traits
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+  std::has_trivial_copy_constructor<T>::value
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
 
 // This one will be different for GCC 5.7 if it's ever supported
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #else
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::is_trivially_copy_constructible<T>::value
-#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::is_trivially_copy_assignable<T>::value
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+  std::is_trivially_copy_constructible<T>::value
+#define IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
+  std::is_trivially_copy_assignable<T>::value
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #endif
 
@@ -280,8 +285,8 @@ struct is_nothrow_swappable
 };
 #endif
 
-// The storage base manages the actual storage, and correctly propagates trivial destruction from T
-// This case is for when T is trivially destructible
+// The storage base manages the actual storage, and correctly propagates trivial
+// destruction from T This case is for when T is trivially destructible
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
@@ -327,8 +332,8 @@ template <class T> struct optional_storage_base<T, true> {
   bool m_has_value = false;
 };
 
-
-// This base class provides some handy member functions which can be used in further derived classes
+// This base class provides some handy member functions which can be used in
+// further derived classes
 template <class T> struct optional_operations_base : optional_storage_base<T> {
   using optional_storage_base<T>::optional_storage_base;
 
@@ -345,7 +350,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
   template <class Opt> void assign(Opt &&rhs) {
     if (this->has_value()) {
       if (rhs.has_value()) {
-          this->m_value = std::forward<Opt>(rhs).get();
+        this->m_value = std::forward<Opt>(rhs).get();
       } else {
         this->m_value.~T();
         this->m_has_value = false;
@@ -353,11 +358,11 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
     }
 
     if (rhs.has_value()) {
-        construct(std::forward<Opt>(rhs).get());
+      construct(std::forward<Opt>(rhs).get());
     }
   }
 
-    bool has_value() const { return this->m_has_value; }
+  bool has_value() const { return this->m_has_value; }
 
   TL_OPTIONAL_11_CONSTEXPR T &get() & { return this->m_value; }
   TL_OPTIONAL_11_CONSTEXPR const T &get() const & { return this->m_value; }
@@ -394,16 +399,18 @@ struct optional_copy_base<T, false> : optional_operations_base<T> {
 };
 
 // This class manages conditionally having a trivial move constructor
-// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it doesn't implement an analogue to std::is_trivially_move_constructible. We have to make do with a non-trivial move constructor even if T is trivially move constructible
+// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it
+// doesn't implement an analogue to std::is_trivially_move_constructible. We
+// have to make do with a non-trivial move constructor even if T is trivially
+// move constructible
 #ifndef TL_OPTIONAL_GCC49
 template <class T, bool = std::is_trivially_move_constructible<T>::value>
 struct optional_move_base : optional_copy_base<T> {
   using optional_copy_base<T>::optional_copy_base;
 };
 #else
-    template <class T, bool = false>
-    struct optional_move_base;
-    #endif
+template <class T, bool = false> struct optional_move_base;
+#endif
 template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
   using optional_copy_base<T>::optional_copy_base;
 
@@ -415,7 +422,7 @@ template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
     if (rhs.has_value()) {
       this->construct(std::move(rhs.get()));
     } else {
-        this->m_has_value = false;
+      this->m_has_value = false;
     }
   }
   optional_move_base &operator=(const optional_move_base &rhs) = default;
@@ -423,7 +430,9 @@ template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
 };
 
 // This class manages conditionally having a trivial copy assignment operator
-    template <class T, bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_DESTRUCTIBLE(T)>
+template <class T, bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) &&
+                          IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) &&
+                          IS_TRIVIALLY_DESTRUCTIBLE(T)>
 struct optional_copy_assign_base : optional_move_base<T> {
   using optional_move_base<T>::optional_move_base;
 };
@@ -437,27 +446,31 @@ struct optional_copy_assign_base<T, false> : optional_move_base<T> {
 
   optional_copy_assign_base(optional_copy_assign_base &&rhs) = default;
   optional_copy_assign_base &operator=(const optional_copy_assign_base &rhs) {
-      this->assign(rhs);
+    this->assign(rhs);
+    return *this;
   }
   optional_copy_assign_base &
   operator=(optional_copy_assign_base &&rhs) = default;
 };
 
-
 // This class manages conditionally having a trivial move assignment operator
-// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it doesn't implement an analogue to std::is_trivially_move_assignable. We have to make do with a non-trivial move assignment operator even if T is trivially move assignable
+// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it
+// doesn't implement an analogue to std::is_trivially_move_assignable. We have
+// to make do with a non-trivial move assignment operator even if T is trivially
+// move assignable
 #ifndef TL_OPTIONAL_GCC49
-template <class T, bool = std::is_trivially_destructible<T>::value && std::is_trivially_move_constructible<T>::value && std::is_trivially_move_assignable<T>::value>
+template <class T, bool = std::is_trivially_destructible<T>::value
+                       &&std::is_trivially_move_constructible<T>::value
+                           &&std::is_trivially_move_assignable<T>::value>
 struct optional_move_assign_base : optional_copy_assign_base<T> {
   using optional_copy_assign_base<T>::optional_copy_assign_base;
 };
 #else
-    template <class T, bool = false>
-    struct optional_move_assign_base;
+template <class T, bool = false> struct optional_move_assign_base;
 #endif
 
-    template <class T>
-    struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
+template <class T>
+struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
   using optional_copy_assign_base<T>::optional_copy_assign_base;
 
   optional_move_assign_base() = default;
@@ -468,15 +481,15 @@ struct optional_move_assign_base : optional_copy_assign_base<T> {
   operator=(const optional_move_assign_base &rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
-      this->assign(std::move(rhs));
-
+    this->assign(std::move(rhs));
+    return *this;
   }
   optional_move_assign_base &
   operator=(optional_move_assign_base &&rhs) = default;
 };
 
-
-// optional_delete_ctor_base will conditionally delete copy and move constructors depending on whether T is copy/move constructible
+// optional_delete_ctor_base will conditionally delete copy and move
+// constructors depending on whether T is copy/move constructible
 template <class T, bool EnableCopy = std::is_copy_constructible<T>::value,
           bool EnableMove = std::is_move_constructible<T>::value>
 struct optional_delete_ctor_base {
@@ -519,7 +532,8 @@ template <class T> struct optional_delete_ctor_base<T, false, false> {
   operator=(optional_delete_ctor_base &&) noexcept = default;
 };
 
-// optional_delete_assign_base will conditionally delete copy and move constructors depending on whether T is copy/move constructible + assignable
+// optional_delete_assign_base will conditionally delete copy and move
+// constructors depending on whether T is copy/move constructible + assignable
 template <class T,
           bool EnableCopy = (std::is_copy_constructible<T>::value &&
                              std::is_copy_assignable<T>::value),
@@ -608,9 +622,11 @@ class optional : private detail::optional_move_assign_base<T>,
 
 public:
 // The different versions for C++14 and 11 are needed because deduced return
-// types are not SFINAE-safe. This provides better support for things like generic lambdas. C.f.
+// types are not SFINAE-safe. This provides better support for things like
+// generic lambdas. C.f.
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0826r0.html
-#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && !defined(TL_EXPECTED_GCC54)
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
+    !defined(TL_EXPECTED_GCC54)
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
   /// if there is one.
@@ -726,7 +742,8 @@ public:
 #endif
 #endif
 
-#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && !defined(TL_EXPECTED_GCC54)
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
+    !defined(TL_EXPECTED_GCC54)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
   /// value())`. Returns a `std::optional<U>`. The return value is empty if
@@ -935,7 +952,8 @@ public:
   }
 
   /// \group map_or_else
-  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &;
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u)
+  /// const &;
   template <class F, class U>
   detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const & {
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
@@ -944,7 +962,8 @@ public:
 
 #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map_or_else
-  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u) const &&;
+  /// \synopsis template <class F, class U>\nauto map_or_else(F &&f, U &&u)
+  /// const &&;
   template <class F, class U>
   detail::invoke_result_t<U> map_or_else(F &&f, U &&u) const && {
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
@@ -1054,11 +1073,12 @@ public:
   ///
   /// If `rhs` contains a value, the stored value is direct-initialized with it.
   /// Otherwise, the constructed optional is empty.
-    TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) = default;
+  TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) = default;
 
   /// Constructs the stored value in-place using the given arguments.
   /// \group in_place
-  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t, Args&&... args);
+  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t,
+  /// Args&&... args);
   template <class... Args>
   constexpr explicit optional(
       detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
@@ -1066,14 +1086,15 @@ public:
       : base(in_place, std::forward<Args>(args)...) {}
 
   /// \group in_place
-  /// \synopsis template <class U, class... Args>\nconstexpr explicit optional(in_place_t, std::initializer_list<U>&, Args&&... args);
+  /// \synopsis template <class U, class... Args>\nconstexpr explicit
+  /// optional(in_place_t, std::initializer_list<U>&, Args&&... args);
   template <class U, class... Args>
   TL_OPTIONAL_11_CONSTEXPR explicit optional(
       detail::enable_if_t<std::is_constructible<T, std::initializer_list<U> &,
                                                 Args &&...>::value,
                           in_place_t>,
       std::initializer_list<U> il, Args &&... args) {
-      this->construct(il, std::forward<Args>(args)...);
+    this->construct(il, std::forward<Args>(args)...);
   }
 
   /// Constructs the stored value with `u`.
@@ -1097,7 +1118,7 @@ public:
       class U, detail::enable_from_other<T, U, const U &> * = nullptr,
       detail::enable_if_t<std::is_convertible<const U &, T>::value> * = nullptr>
   optional(const optional<U> &rhs) {
-      this->construct(*rhs);
+    this->construct(*rhs);
   }
 
   /// \exclude
@@ -1105,7 +1126,7 @@ public:
             detail::enable_if_t<!std::is_convertible<const U &, T>::value> * =
                 nullptr>
   explicit optional(const optional<U> &rhs) {
-      this->construct(*rhs);
+    this->construct(*rhs);
   }
 
   /// Converting move constructor.
@@ -1114,7 +1135,7 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr>
   optional(optional<U> &&rhs) {
-      this->construct(std::move(*rhs));
+    this->construct(std::move(*rhs));
   }
 
   /// \exclude
@@ -1122,7 +1143,7 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr>
   explicit optional(optional<U> &&rhs) {
-      this->construct(std::move(*rhs));
+    this->construct(std::move(*rhs));
   }
 
   /// Destroys the stored value if there is one.
@@ -1160,7 +1181,7 @@ public:
     if (has_value()) {
       this->m_value = std::forward<U>(u);
     } else {
-        this->construct(std::forward<U>(u));
+      this->construct(std::forward<U>(u));
     }
 
     return *this;
@@ -1178,12 +1199,12 @@ public:
       if (rhs.has_value()) {
         this->m_value = *rhs;
       } else {
-          this->hard_reset();
+        this->hard_reset();
       }
     }
 
     if (rhs.has_value()) {
-        this->construct(*rhs);
+      this->construct(*rhs);
     }
 
     return *this;
@@ -1201,12 +1222,12 @@ public:
       if (rhs.has_value()) {
         this->m_value = std::move(*rhs);
       } else {
-          this->hard_reset();
+        this->hard_reset();
       }
     }
 
     if (rhs.has_value()) {
-        this->construct(std::move(*rhs));
+      this->construct(std::move(*rhs));
     }
 
     return *this;
@@ -1223,7 +1244,8 @@ public:
   }
 
   /// \group emplace
-  /// \synopsis template <class U, class... Args>\nT& emplace(std::initializer_list<U> il, Args &&... args);
+  /// \synopsis template <class U, class... Args>\nT&
+  /// emplace(std::initializer_list<U> il, Args &&... args);
   template <class U, class... Args>
   detail::enable_if_t<
       std::is_constructible<T, std::initializer_list<U> &, Args &&...>::value,
@@ -1247,7 +1269,7 @@ public:
         using std::swap;
         swap(**this, *rhs);
       } else {
-          new (std::addressof(rhs.m_value)) T(std::move(this->m_value));
+        new (std::addressof(rhs.m_value)) T(std::move(this->m_value));
         this->m_value.T::~T();
       }
     } else if (rhs.has_value()) {
