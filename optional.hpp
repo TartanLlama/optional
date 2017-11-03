@@ -629,8 +629,8 @@ template <class T, bool = false> struct optional_move_assign_base;
 // types are not SFINAE-safe. This provides better support for things like
 // generic lambdas. C.f.
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0826r0.html
-#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
-    !defined(TL_EXPECTED_GCC54)
+#if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
+    !defined(TL_OPTIONAL_GCC54)
     /// \group and_then
     /// Carries out some operation which returns an optional on the stored
     /// object if there is one. \requires `std::invoke(std::forward<F>(f),
@@ -745,8 +745,8 @@ template <class T, bool = false> struct optional_move_assign_base;
 #endif
 #endif
 
-#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
-    !defined(TL_EXPECTED_GCC54)
+#if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
+    !defined(TL_OPTIONAL_GCC54)
     /// \brief Carries out some operation on the stored object if there is one.
     /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
     /// value())`. Returns a `std::optional<U>`. The return value is empty if
