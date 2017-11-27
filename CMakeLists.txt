@@ -18,6 +18,7 @@ set(TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/constexpr.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/constructors.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/bases.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/nullopt.cpp)
 
 add_executable(tests ${TEST_SOURCES})

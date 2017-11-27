@@ -47,21 +47,6 @@ TEST_CASE("Deletion", "[bases.deletion]") {
     REQUIRE(std::is_move_assignable<tl::optional<int>>::value);
     REQUIRE(std::is_destructible<tl::optional<int>>::value);
 
-//TODO fix
-/*    {
-        struct T {
-            T()=default;
-        };
-        REQUIRE(std::is_default_constructible<tl::optional<T>>::value);
-    }
-
-    {
-        struct T {
-            T(int);
-        };
-        REQUIRE(!std::is_default_constructible<tl::optional<T>>::value);
-    }
-*/
     {
         struct T {
             T(const T&) = default;
