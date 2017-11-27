@@ -73,7 +73,8 @@
 #endif
 
 namespace tl {
-#ifndef TL_OPTIONAL_EXPECTED_MUTEX
+#ifndef TL_MONOSTATE_INPLACE_MUTEX
+#define TL_MONOSTATE_INPLACE_MUTEX
 /// \brief Used to represent an optional with no data; essentially a bool
 class monostate {};
 
@@ -89,7 +90,8 @@ template <class T> class optional;
 
 /// \exclude
 namespace detail {
-#ifndef TL_OPTIONAL_EXPECTED_MUTEX
+#ifndef TL_TRAITS_MUTEX
+#define TL_TRAITS_MUTEX
 // C++14-style aliases for brevity
 template <class T> using remove_const_t = typename std::remove_const<T>::type;
 template <class T>
@@ -1650,5 +1652,4 @@ template <class T> struct hash<tl::optional<T>> {
 };
 } // namespace std
 
-#define TL_OPTIONAL_EXPECTED_MUTEX
 #endif
