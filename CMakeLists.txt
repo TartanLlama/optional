@@ -24,8 +24,8 @@ set(TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.cpp
 add_executable(tests ${TEST_SOURCES})
 
 add_library(optional INTERFACE)
-target_sources(optional INTERFACE ${CMAKE_SOURCE_DIR}/optional.hpp)
-target_include_directories(optional INTERFACE ${CMAKE_SOURCE_DIR})
+target_sources(optional INTERFACE ${CMAKE_SOURCE_DIR}/tl/optional.hpp)
+target_include_directories(optional INTERFACE ${CMAKE_SOURCE_DIR}/tl)
 
 target_link_libraries(tests Catch optional)
 set_property(TARGET tests PROPERTY CXX_STANDARD 14)
@@ -36,7 +36,7 @@ find_package(standardese) # find standardese after installation
 # generates a custom target that will run standardese to generate the documentation
 if (standardese_FOUND)
 standardese_generate(optional
-                     INCLUDE_DIRECTORY .
+                     INCLUDE_DIRECTORY tl
                      CONFIG ${CMAKE_SOURCE_DIR}/standardese.config
-                     INPUT optional.hpp)
+                     INPUT tl/optional.hpp)
 endif ()
