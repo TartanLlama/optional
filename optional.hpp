@@ -1595,7 +1595,7 @@ template <class Opt, class F,
 constexpr auto map_impl(Opt &&opt, F &&f) {
   return opt.has_value()
              ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
-             : optional<Ret>(nullopt);
+             : optional<detail::decay_t<Ret>>(nullopt);
 }
 
 template <class Opt, class F,
@@ -1616,10 +1616,10 @@ template <class Opt, class F,
                                               *std::declval<Opt>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 
-constexpr auto map_impl(Opt &&opt, F &&f) -> optional<Ret> {
+constexpr auto map_impl(Opt &&opt, F &&f) -> optional<detail::decay_t<Ret>> {
   return opt.has_value()
              ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
-             : optional<Ret>(nullopt);
+             : optional<detail::decay_t<Ret>>(nullopt);
 }
 
 template <class Opt, class F,

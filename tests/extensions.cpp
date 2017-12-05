@@ -119,6 +119,12 @@ TEST_CASE("Monadic operations", "[monadic]") {
     const tl::optional<int> o37 = tl::nullopt;
     auto o37r = std::move(o37).map([](int) { return; });
     REQUIRE(!o37r);
+
+    // callable which returns a reference
+    tl::optional<int> o38 = 42;
+    auto o38r = o38.map([](int& i) -> const int& { return i; });
+    REQUIRE(o38r);
+    REQUIRE(*o38r == 42);
   }
 
   SECTION("map constexpr") {
