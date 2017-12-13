@@ -102,9 +102,6 @@ TEST_CASE("Deletion", "[bases.deletion]") {
         };
         REQUIRE(std::is_copy_constructible<tl::optional<T>>::value);
         REQUIRE(std::is_copy_assignable<tl::optional<T>>::value);
-        //TODO see why this fails
-        //REQUIRE(!std::is_move_constructible<tl::optional<T>>::value);
-        //REQUIRE(!std::is_move_assignable<tl::optional<T>>::value);
     }
 }
 #endif

@@ -483,15 +483,18 @@ struct optional_move_assign_base<T, false> : optional_copy_assign_base<T> {
   optional_move_assign_base(const optional_move_assign_base &rhs) = default;
 
   optional_move_assign_base(optional_move_assign_base &&rhs) = default;
+    
   optional_move_assign_base &
-  operator=(const optional_move_assign_base &rhs) noexcept(
+  operator=(const optional_move_assign_base &rhs) = default;
+    
+  optional_move_assign_base &
+  operator=(optional_move_assign_base &&rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
     this->assign(std::move(rhs));
     return *this;
   }
-  optional_move_assign_base &
-  operator=(optional_move_assign_base &&rhs) = default;
+
 };
 
 // optional_delete_ctor_base will conditionally delete copy and move
