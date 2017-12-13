@@ -283,12 +283,10 @@ TEST_CASE("Monadic operations", "[monadic]") {
     tl::optional<int> o1 = 42;
     REQUIRE(*o1.conjunction(42.0) == 42.0);
     REQUIRE(*o1.conjunction(std::string{"hello"}) == std::string{"hello"});
-    REQUIRE(!o1.conjunction(tl::nullopt));
 
     tl::optional<int> o2;
     REQUIRE(!o2.conjunction(42.0));
     REQUIRE(!o2.conjunction(std::string{"hello"}));
-    REQUIRE(!o2.conjunction(tl::nullopt));
   }
 
   SECTION("map_or") {
