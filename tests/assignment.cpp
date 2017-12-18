@@ -58,7 +58,10 @@ TEST_CASE("Assignment reference", "[assignment.ref]") {
     REQUIRE(*o1 == i);
     REQUIRE(*o1 == k);        
     REQUIRE(&*o1 != &i);
-    REQUIRE(&*o1 == &k);            
+    REQUIRE(&*o1 == &k);
+
+    k = 12;
+    REQUIRE(*o1 == 12);
 
     o1 = tl::nullopt;
     REQUIRE(!o1);
