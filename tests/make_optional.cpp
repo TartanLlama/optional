@@ -41,4 +41,6 @@ TEST_CASE("Make optional", "[make_optional]") {
   auto i = 42;
   auto o6 = tl::make_optional<int&>(i);
   REQUIRE((std::is_same<decltype(o6), tl::optional<int&>>::value));
+  REQUIRE(o6);
+  REQUIRE(*o6 == 42);    
 }

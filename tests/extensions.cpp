@@ -122,7 +122,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
 
     // callable which returns a reference
     tl::optional<int> o38 = 42;
-    auto o38r = o38.map([](int& i) -> const int& { return i; });
+    auto o38r = o38.map([](int &i) -> const int & { return i; });
     REQUIRE(o38r);
     REQUIRE(*o38r == 42);
   }
