@@ -1,5 +1,5 @@
 # optional
-Single header implementation of `std::optional` with functional-style extensions.
+Single header implementation of `std::optional` with functional-style extensions and support for references.
 
 Clang + GCC: [![Linux Build Status](https://travis-ci.org/TartanLlama/optional.png?branch=master)](https://travis-ci.org/TartanLlama/optional)
 MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/k5x00xa11y3s5wsg?svg=true)](https://ci.appveyor.com/project/TartanLlama/optional)
@@ -65,6 +65,26 @@ The interface is the same as `std::optional`, but the following member functions
   * `tl::optional<int>{}.disjunction(13); //13`
 - `take`: returns the current value, leaving the optional empty.
   * `opt_string.take().map(&std::string::size); //opt_string now empty;`
+
+In addition to those member functions, optional references are also supported:
+
+```
+int i = 42;
+tl::optional<int&> o = i;
+*o == 42; //true
+i = 12;
+*o = 12; //true
+&*o == &i; //true
+```
+
+Assignment has rebind semantics rather than assign-through semantics:
+
+```
+int j = 8;
+o = j;
+
+&*o == &j; //true
+```
 
 ### Compiler support
 
