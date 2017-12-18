@@ -697,11 +697,11 @@ public:
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored
   /// object if there is one. \requires `std::invoke(std::forward<F>(f),
-  /// value())` returns a `std::optional<U>` for some `U`. \returns Let `U` be
-  /// the result of `std::invoke(std::forward<F>(f), value())`. Returns a
-  /// `std::optional<U>`. The return value is empty if `*this` is empty,
-  /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned.
+  /// value())` returns a `std::optional<U>` for some `U`.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise the return value of
+  /// `std::invoke(std::forward<F>(f), value())` is returned.
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F>
@@ -834,7 +834,8 @@ public:
 
   /// \brief Calls `f` if the optional is empty
   /// \requires `std::invoke_result_t<F>` must be void or convertible to
-  /// `optional<T>`. \effects If `*this` has a value, returns `*this`.
+  /// `optional<T>`.
+  /// \effects If `*this` has a value, returns `*this`.
   /// Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns
   /// `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
   ///
@@ -1089,8 +1090,7 @@ public:
 
   /// Constructs the stored value in-place using the given arguments.
   /// \group in_place
-  /// \synopsis template <class... Args> constexpr explicit
-  /// optional(in_place_t, Args&&... args);
+  /// \synopsis template <class... Args> constexpr explicit optional(in_place_t, Args&&... args);
   template <class... Args>
   constexpr explicit optional(
       detail::enable_if_t<std::is_constructible<T, Args...>::value, in_place_t>,
@@ -1098,8 +1098,7 @@ public:
       : base(in_place, std::forward<Args>(args)...) {}
 
   /// \group in_place
-  /// \synopsis template <class U, class... Args>\nconstexpr explicit
-  /// optional(in_place_t, std::initializer_list<U>&, Args&&... args);
+  /// \synopsis template <class U, class... Args>\nconstexpr explicit optional(in_place_t, std::initializer_list<U>&, Args&&... args);
   template <class U, class... Args>
   TL_OPTIONAL_11_CONSTEXPR explicit optional(
       detail::enable_if_t<std::is_constructible<T, std::initializer_list<U> &,
@@ -1246,7 +1245,8 @@ public:
   }
 
   /// Constructs the value in-place, destroying the current one if there is
-  /// one. \group emplace
+  /// one.
+  /// \group emplace
   template <class... Args> T &emplace(Args &&... args) {
     static_assert(std::is_constructible<T, Args &&...>::value,
                   "T must be constructible with Args");
@@ -1256,8 +1256,7 @@ public:
   }
 
   /// \group emplace
-  /// \synopsis template <class U, class... Args>\nT&
-  /// emplace(std::initializer_list<U> il, Args &&... args);
+  /// \synopsis template <class U, class... Args>\nT& emplace(std::initializer_list<U> il, Args &&... args);
   template <class U, class... Args>
   detail::enable_if_t<
       std::is_constructible<T, std::initializer_list<U> &, Args &&...>::value,
@@ -1336,7 +1335,7 @@ public:
   /// \returns the contained value if there is one, otherwise throws
   /// [bad_optional_access]
   /// \group value
-  /// synopsis constexpr T &value();
+  /// \synopsis constexpr T &value();
   TL_OPTIONAL_11_CONSTEXPR T &value() & {
     if (has_value())
       return this->m_value;
@@ -1563,8 +1562,7 @@ inline constexpr bool operator>=(const U &lhs, const optional<T> &rhs) {
   return rhs.has_value() ? lhs >= *rhs : true;
 }
 
-/// \synopsis template <class T>\nvoid swap(optional<T> &lhs, optional<T>
-/// &rhs);
+/// \synopsis template <class T>\nvoid swap(optional<T> &lhs, optional<T> &rhs);
 template <class T,
           detail::enable_if_t<std::is_move_constructible<T>::value> * = nullptr,
           detail::enable_if_t<detail::is_swappable<T>::value> * = nullptr>
@@ -1599,12 +1597,28 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
 template <class T> optional(T)->optional<T>;
 #endif
 
-/// An optional object is an object that contains the storage for another
-/// object and manages the lifetime of this contained object, if any. The
-/// contained object may be initialized after the optional object has been
-/// initialized, and may be destroyed before the optional object has been
-/// destroyed. The initialization state of the contained object is tracked by
-/// the optional object.
+/// Specialization for when `T` is a reference. `optional<T&>` acts similarly
+/// to a `T*`, but provides more operations and shows intent more clearly.
+///
+/// *Examples*:
+///
+/// ```
+/// int i = 42;
+/// tl::optional<int&> o = i;
+/// *o == 42; //true
+/// i = 12;
+/// *o = 12; //true
+/// &*o == &i; //true
+/// ```
+///
+/// Assignment has rebind semantics rather than assign-through semantics:
+///
+/// ```
+/// int j = 8;
+/// o = j;
+///
+/// &*o == &j; //true
+/// ```
 template <class T> class optional<T &> {
 public:
 // The different versions for C++14 and 11 are needed because deduced return
@@ -2062,10 +2076,9 @@ public:
 
   /// Constructs the stored value with `u`.
   /// \synopsis template <class U=T> constexpr optional(U &&u);
-  template <
-      class U = T,
-      detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value> * =
-          nullptr>
+  template <class U = T,
+            detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value>
+                * = nullptr>
   constexpr optional(U &&u) : m_value(std::addressof(u)) {
     static_assert(std::is_lvalue_reference<U>::value, "U must be an lvalue");
   }
@@ -2087,12 +2100,13 @@ public:
 
   /// Copy assignment.
   ///
-  /// Copies the value from `rhs` if there is one. Otherwise resets the stored
-  /// value in `*this`.
+  /// Rebinds this optional to the referee of `rhs` if there is one. Otherwise
+  /// resets the stored value in `*this`.
   optional &operator=(const optional &rhs) = default;
 
-  /// Assigns the stored value from `u`, destroying the old value if there was
-  /// one.
+  /// Rebinds this optional to `u`.
+  ///
+  /// \requires `U` must be an lvalue reference.
   /// \synopsis optional &operator=(U &&u);
   template <class U = T,
             detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value>
@@ -2105,17 +2119,17 @@ public:
 
   /// Converting copy assignment operator.
   ///
-  /// Copies the value from `rhs` if there is one. Otherwise resets the stored
-  /// value in `*this`.
-  /// \synopsis optional &operator=(const optional<U> & rhs);
-  template <class U>
-  optional &operator=(const optional<U> &rhs) {
+  /// Rebinds this optional to the referee of `rhs` if there is one. Otherwise
+  /// resets the stored value in `*this`.
+  template <class U> optional &operator=(const optional<U> &rhs) {
     m_value = std::addressof(rhs.value());
     return *this;
   }
 
   /// Constructs the value in-place, destroying the current one if there is
-  /// one. \group emplace
+  /// one.
+  ///
+  /// \group emplace
   template <class... Args> T &emplace(Args &&... args) noexcept {
     static_assert(std::is_constructible<T, Args &&...>::value,
                   "T must be constructible with Args");
