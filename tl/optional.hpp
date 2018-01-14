@@ -43,18 +43,18 @@
 #define TL_OPTIONAL_NO_CONSTRR
 
 // GCC < 5 doesn't support some standard C++11 type traits
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+#define TL_OPTIONAL_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::has_trivial_copy_constructor<T>::value
-#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
+#define TL_OPTIONAL_IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
 
 // This one will be different for GCC 5.7 if it's ever supported
-#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
+#define TL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #else
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+#define TL_OPTIONAL_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::is_trivially_copy_constructible<T>::value
-#define IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
+#define TL_OPTIONAL_IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
   std::is_trivially_copy_assignable<T>::value
-#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
+#define TL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #endif
 
 #if __cplusplus > 201103L
@@ -380,7 +380,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
 
 // This class manages conditionally having a trivial copy constructor
 // This specialization is for when T is trivially copy constructible
-template <class T, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
+template <class T, bool = TL_OPTIONAL_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
 struct optional_copy_base : optional_operations_base<T> {
   using optional_operations_base<T>::optional_operations_base;
 };
@@ -436,9 +436,9 @@ template <class T> struct optional_move_base<T, false> : optional_copy_base<T> {
 };
 
 // This class manages conditionally having a trivial copy assignment operator
-template <class T, bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) &&
-                          IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) &&
-                          IS_TRIVIALLY_DESTRUCTIBLE(T)>
+template <class T, bool = TL_OPTIONAL_IS_TRIVIALLY_COPY_ASSIGNABLE(T) &&
+                          TL_OPTIONAL_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) &&
+                          TL_OPTIONAL_IS_TRIVIALLY_DESTRUCTIBLE(T)>
 struct optional_copy_assign_base : optional_move_base<T> {
   using optional_move_base<T>::optional_move_base;
 };
