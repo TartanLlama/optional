@@ -125,6 +125,11 @@ TEST_CASE("Monadic operations", "[monadic]") {
     auto o38r = o38.map([](int &i) -> const int & { return i; });
     REQUIRE(o38r);
     REQUIRE(*o38r == 42);
+
+    int i = 42;
+    tl::optional<int&> o39 = i;
+    o39.map([](int& x){x = 12;});
+    REQUIRE(i == 12);
   }
 
   SECTION("map constexpr") {

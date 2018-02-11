@@ -1,3 +1,4 @@
+
 ///
 // optional - An implementation of std::optional with extensions
 // Written in 2017 by Simon Brand (@TartanLlama)
@@ -1597,6 +1598,59 @@ inline constexpr optional<T> make_optional(std::initializer_list<U> il,
 template <class T> optional(T)->optional<T>;
 #endif
 
+/// \exclude
+namespace detail {
+#ifdef TL_OPTIONAL_CX14
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+constexpr auto map_impl(Opt &&opt, F &&f) {
+  return opt.has_value()
+             ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
+             : optional<detail::decay_t<Ret>>(nullopt);
+}
+
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+auto map_impl(Opt &&opt, F &&f) {
+  if (opt.has_value()) {
+    detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
+    return monostate{};
+  }
+
+  return optional<Ret>(nullopt);
+}
+#else
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+
+constexpr auto map_impl(Opt &&opt, F &&f) -> optional<detail::decay_t<Ret>> {
+  return opt.has_value()
+             ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
+             : optional<detail::decay_t<Ret>>(nullopt);
+}
+
+template <class Opt, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Opt>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+
+auto map_impl(Opt &&opt, F &&f) -> optional<monostate> {
+  if (opt.has_value()) {
+    detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
+    return monostate{};
+  }
+
+  return nullopt;
+}
+#endif
+} // namespace detail
+
 /// Specialization for when `T` is a reference. `optional<T&>` acts similarly
 /// to a `T*`, but provides more operations and shows intent more clearly.
 ///
@@ -1752,25 +1806,25 @@ public:
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) &;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) & {
-    return map_impl(*this, std::forward<F>(f));
+    return detail::map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return detail::map_impl(std::move(*this), std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) const&;
   template <class F> constexpr auto map(F &&f) const & {
-    return map_impl(*this, std::forward<F>(f));
+    return detail::map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) const&&;
   template <class F> constexpr auto map(F &&f) const && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return detail::map_impl(std::move(*this), std::forward<F>(f));
   }
 #else
   /// \brief Carries out some operation on the stored object if there is one.
@@ -1786,7 +1840,7 @@ public:
   TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &>(),
                                              std::declval<F &&>()))
   map(F &&f) & {
-    return map_impl(*this, std::forward<F>(f));
+    return detail::map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
@@ -1795,7 +1849,7 @@ public:
   TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &&>(),
                                              std::declval<F &&>()))
   map(F &&f) && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return detail::map_impl(std::move(*this), std::forward<F>(f));
   }
 
   /// \group map
@@ -1804,7 +1858,7 @@ public:
   constexpr decltype(map_impl(std::declval<const optional &>(),
                               std::declval<F &&>()))
   map(F &&f) const & {
-    return map_impl(*this, std::forward<F>(f));
+    return detail::map_impl(*this, std::forward<F>(f));
   }
 
 #ifndef TL_OPTIONAL_NO_CONSTRR
@@ -1814,7 +1868,7 @@ public:
   constexpr decltype(map_impl(std::declval<const optional &&>(),
                               std::declval<F &&>()))
   map(F &&f) const && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return detail::map_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
 #endif
@@ -2239,58 +2293,7 @@ private:
   T *m_value;
 }; // namespace tl
 
-/// \exclude
-namespace detail {
-#ifdef TL_OPTIONAL_CX14
-template <class Opt, class F,
-          class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Opt>())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
-constexpr auto map_impl(Opt &&opt, F &&f) {
-  return opt.has_value()
-             ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
-             : optional<detail::decay_t<Ret>>(nullopt);
-}
 
-template <class Opt, class F,
-          class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Opt>())),
-          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
-auto map_impl(Opt &&opt, F &&f) {
-  if (opt.has_value()) {
-    detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
-    return monostate{};
-  }
-
-  return optional<Ret>(nullopt);
-}
-#else
-template <class Opt, class F,
-          class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Opt>())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
-
-constexpr auto map_impl(Opt &&opt, F &&f) -> optional<detail::decay_t<Ret>> {
-  return opt.has_value()
-             ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
-             : optional<detail::decay_t<Ret>>(nullopt);
-}
-
-template <class Opt, class F,
-          class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Opt>())),
-          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
-
-auto map_impl(Opt &&opt, F &&f) -> optional<monostate> {
-  if (opt.has_value()) {
-    detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
-    return monostate{};
-  }
-
-  return nullopt;
-}
-#endif
-} // namespace detail
 
 } // namespace tl
 
