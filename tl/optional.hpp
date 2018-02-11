@@ -1837,8 +1837,8 @@ public:
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) &;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &>(),
-                                             std::declval<F &&>()))
+  TL_OPTIONAL_11_CONSTEXPR decltype(detail::map_impl(std::declval<optional &>(),
+                                                     std::declval<F &&>()))
   map(F &&f) & {
     return detail::map_impl(*this, std::forward<F>(f));
   }
@@ -1846,8 +1846,8 @@ public:
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) &&;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &&>(),
-                                             std::declval<F &&>()))
+  TL_OPTIONAL_11_CONSTEXPR decltype(detail::map_impl(std::declval<optional &&>(),
+                                                     std::declval<F &&>()))
   map(F &&f) && {
     return detail::map_impl(std::move(*this), std::forward<F>(f));
   }
@@ -1855,8 +1855,8 @@ public:
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const&;
   template <class F>
-  constexpr decltype(map_impl(std::declval<const optional &>(),
-                              std::declval<F &&>()))
+  constexpr decltype(detail::map_impl(std::declval<const optional &>(),
+                                      std::declval<F &&>()))
   map(F &&f) const & {
     return detail::map_impl(*this, std::forward<F>(f));
   }
@@ -1865,8 +1865,8 @@ public:
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const&&;
   template <class F>
-  constexpr decltype(map_impl(std::declval<const optional &&>(),
-                              std::declval<F &&>()))
+  constexpr decltype(detail::map_impl(std::declval<const optional &&>(),
+                                      std::declval<F &&>()))
   map(F &&f) const && {
     return detail::map_impl(std::move(*this), std::forward<F>(f));
   }
