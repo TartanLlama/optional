@@ -2214,19 +2214,11 @@ public:
   /// \requires a value is stored
   /// \group deref
   /// \synopsis constexpr T &operator*();
-  TL_OPTIONAL_11_CONSTEXPR T &operator*() & { return *m_value; }
+  TL_OPTIONAL_11_CONSTEXPR T &operator*() { return *m_value; }
 
   /// \group deref
   /// \synopsis constexpr const T &operator*() const;
-  constexpr const T &operator*() const & { return *m_value; }
-
-  /// \exclude
-  TL_OPTIONAL_11_CONSTEXPR T &&operator*() && { return std::move(*m_value); }
-
-#ifndef TL_OPTIONAL_NO_CONSTRR
-  /// \exclude
-  constexpr const T &&operator*() const && { return std::move(*m_value); }
-#endif
+  constexpr const T &operator*() const { return *m_value; }
 
   /// \returns whether or not the optional has a value
   /// \group has_value
@@ -2241,33 +2233,18 @@ public:
   /// [bad_optional_access]
   /// \group value
   /// synopsis constexpr T &value();
-  TL_OPTIONAL_11_CONSTEXPR T &value() & {
+  TL_OPTIONAL_11_CONSTEXPR T &value() {
     if (has_value())
       return *m_value;
     throw bad_optional_access();
   }
   /// \group value
   /// \synopsis constexpr const T &value() const;
-  TL_OPTIONAL_11_CONSTEXPR const T &value() const & {
+  TL_OPTIONAL_11_CONSTEXPR const T &value() const {
     if (has_value())
       return *m_value;
     throw bad_optional_access();
   }
-  /// \exclude
-  TL_OPTIONAL_11_CONSTEXPR T &&value() && {
-    if (has_value())
-      return std::move(*m_value);
-    throw bad_optional_access();
-  }
-
-#ifndef TL_OPTIONAL_NO_CONSTRR
-  /// \exclude
-  constexpr const T &&value() const && {
-    if (has_value())
-      return std::move(*m_value);
-    throw bad_optional_access();
-  }
-#endif
 
   /// \returns the stored value if there is one, otherwise returns `u`
   /// \group value_or
