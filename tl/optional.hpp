@@ -63,8 +63,7 @@
 
 // constexpr implies const in C++11, not C++14
 #if (__cplusplus == 201103L || defined(TL_OPTIONAL_MSVC2015) ||                \
-     defined(TL_OPTIONAL_GCC49)) &&                                            \
-    !defined(TL_OPTIONAL_GCC54)
+     defined(TL_OPTIONAL_GCC49))
 /// \exclude
 #define TL_OPTIONAL_11_CONSTEXPR
 #else
