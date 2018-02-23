@@ -8,7 +8,7 @@
   REQUIRE(e);
 
 TEST_CASE("Constexpr", "[constexpr]") {
-#if !defined(TL_OPTIONAL_MSVC2015) && !defined(TL_OPTIONAL_GCC49)
+#if !defined(TL_OPTIONAL_MSVC2015) && defined(TL_OPTIONAL_CXX14)
   SECTION("empty construct") {
     constexpr tl::optional<int> o2{};
     constexpr tl::optional<int> o3 = {};
