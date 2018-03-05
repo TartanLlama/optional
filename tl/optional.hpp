@@ -765,25 +765,25 @@ public:
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) &;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) & {
-    return map_impl(*this, std::forward<F>(f));
+    return optional_map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) const&;
   template <class F> constexpr auto map(F &&f) const & {
-    return map_impl(*this, std::forward<F>(f));
+    return optional_map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) const&&;
   template <class F> constexpr auto map(F &&f) const && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 #else
   /// \brief Carries out some operation on the stored object if there is one.
@@ -796,38 +796,38 @@ public:
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) &;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &>(),
+  TL_OPTIONAL_11_CONSTEXPR decltype(optional_map_impl(std::declval<optional &>(),
                                              std::declval<F &&>()))
   map(F &&f) & {
-    return map_impl(*this, std::forward<F>(f));
+    return optional_map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) &&;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR decltype(map_impl(std::declval<optional &&>(),
+  TL_OPTIONAL_11_CONSTEXPR decltype(optional_map_impl(std::declval<optional &&>(),
                                              std::declval<F &&>()))
   map(F &&f) && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const&;
   template <class F>
-  constexpr decltype(map_impl(std::declval<const optional &>(),
+  constexpr decltype(optional_map_impl(std::declval<const optional &>(),
                               std::declval<F &&>()))
   map(F &&f) const & {
-    return map_impl(*this, std::forward<F>(f));
+    return optional_map_impl(*this, std::forward<F>(f));
   }
 
 #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const&&;
   template <class F>
-  constexpr decltype(map_impl(std::declval<const optional &&>(),
+  constexpr decltype(optional_map_impl(std::declval<const optional &&>(),
                               std::declval<F &&>()))
   map(F &&f) const && {
-    return map_impl(std::move(*this), std::forward<F>(f));
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
 #endif
@@ -1604,7 +1604,7 @@ template <class Opt, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Opt>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
-constexpr auto map_impl(Opt &&opt, F &&f) {
+constexpr auto optional_map_impl(Opt &&opt, F &&f) {
   return opt.has_value()
              ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
              : optional<detail::decay_t<Ret>>(nullopt);
@@ -1614,7 +1614,7 @@ template <class Opt, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Opt>())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
-auto map_impl(Opt &&opt, F &&f) {
+auto optional_map_impl(Opt &&opt, F &&f) {
   if (opt.has_value()) {
     detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
     return monostate{};
@@ -1628,7 +1628,7 @@ template <class Opt, class F,
                                               *std::declval<Opt>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 
-constexpr auto map_impl(Opt &&opt, F &&f) -> optional<detail::decay_t<Ret>> {
+constexpr auto optional_map_impl(Opt &&opt, F &&f) -> optional<detail::decay_t<Ret>> {
   return opt.has_value()
              ? detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt))
              : optional<detail::decay_t<Ret>>(nullopt);
@@ -1639,7 +1639,7 @@ template <class Opt, class F,
                                               *std::declval<Opt>())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
 
-auto map_impl(Opt &&opt, F &&f) -> optional<monostate> {
+auto optional_map_impl(Opt &&opt, F &&f) -> optional<monostate> {
   if (opt.has_value()) {
     detail::invoke(std::forward<F>(f), *std::forward<Opt>(opt));
     return monostate{};
@@ -1805,25 +1805,25 @@ public:
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) &;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) & {
-    return detail::map_impl(*this, std::forward<F>(f));
+    return detail::optional_map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F> TL_OPTIONAL_11_CONSTEXPR auto map(F &&f) && {
-    return detail::map_impl(std::move(*this), std::forward<F>(f));
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) const&;
   template <class F> constexpr auto map(F &&f) const & {
-    return detail::map_impl(*this, std::forward<F>(f));
+    return detail::optional_map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> constexpr auto map(F &&f) const&&;
   template <class F> constexpr auto map(F &&f) const && {
-    return detail::map_impl(std::move(*this), std::forward<F>(f));
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 #else
   /// \brief Carries out some operation on the stored object if there is one.
@@ -1836,38 +1836,38 @@ public:
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) &;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR decltype(detail::map_impl(std::declval<optional &>(),
+  TL_OPTIONAL_11_CONSTEXPR decltype(detail::optional_map_impl(std::declval<optional &>(),
                                                      std::declval<F &&>()))
   map(F &&f) & {
-    return detail::map_impl(*this, std::forward<F>(f));
+    return detail::optional_map_impl(*this, std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) &&;
   template <class F>
-  TL_OPTIONAL_11_CONSTEXPR decltype(detail::map_impl(std::declval<optional &&>(),
+  TL_OPTIONAL_11_CONSTEXPR decltype(detail::optional_map_impl(std::declval<optional &&>(),
                                                      std::declval<F &&>()))
   map(F &&f) && {
-    return detail::map_impl(std::move(*this), std::forward<F>(f));
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const&;
   template <class F>
-  constexpr decltype(detail::map_impl(std::declval<const optional &>(),
+  constexpr decltype(detail::optional_map_impl(std::declval<const optional &>(),
                                       std::declval<F &&>()))
   map(F &&f) const & {
-    return detail::map_impl(*this, std::forward<F>(f));
+    return detail::optional_map_impl(*this, std::forward<F>(f));
   }
 
 #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \group map
   /// \synopsis template <class F> auto map(F &&f) const&&;
   template <class F>
-  constexpr decltype(detail::map_impl(std::declval<const optional &&>(),
+  constexpr decltype(detail::optional_map_impl(std::declval<const optional &&>(),
                                       std::declval<F &&>()))
   map(F &&f) const && {
-    return detail::map_impl(std::move(*this), std::forward<F>(f));
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
 #endif
