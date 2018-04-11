@@ -80,7 +80,7 @@ TEST_CASE("Noexcept", "[noexcept]") {
     struct throw_move_assign {
       throw_move_assign() = default;
       throw_move_assign(throw_move_assign &&){};
-      throw_move_assign &operator=(const throw_move_assign &) {}
+      throw_move_assign &operator=(const throw_move_assign &) { return *this; }
     };
 
     using nothrow_opt = tl::optional<nothrow_move_assign>;

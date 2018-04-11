@@ -32,8 +32,8 @@ TEST_CASE("Triviality", "[bases.triviality]") {
         struct T {
             T(const T&){}
             T(T&&) {};
-            T& operator=(const T&) {}
-            T& operator=(T&&) {};
+            T& operator=(const T&) { return *this; }
+            T& operator=(T&&) { return *this; };
             ~T(){}
         };
         REQUIRE(!std::is_trivially_copy_constructible<tl::optional<T>>::value);
