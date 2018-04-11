@@ -1357,7 +1357,7 @@ public:
 
 #ifndef TL_OPTIONAL_NO_CONSTRR
   /// \exclude
-  constexpr const T &&value() const && {
+  TL_OPTIONAL_11_CONSTEXPR const T &&value() const && {
     if (has_value())
       return std::move(this->m_value);
     throw bad_optional_access();
@@ -1374,7 +1374,7 @@ public:
   }
 
   /// \group value_or
-  template <class U> constexpr T value_or(U &&u) && {
+  template <class U> TL_OPTIONAL_11_CONSTEXPR T value_or(U &&u) && {
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be move constructible and convertible from U");
@@ -2255,7 +2255,7 @@ public:
   }
 
   /// \group value_or
-  template <class U> constexpr T value_or(U &&u) && {
+  template <class U> TL_OPTIONAL_11_CONSTEXPR T value_or(U &&u) && {
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be move constructible and convertible from U");
