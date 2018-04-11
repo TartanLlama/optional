@@ -372,7 +372,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
 
   TL_OPTIONAL_11_CONSTEXPR T &get() & { return this->m_value; }
   TL_OPTIONAL_11_CONSTEXPR const T &get() const & { return this->m_value; }
-  TL_OPTIONAL_11_CONSTEXPR T &&get() && { std::move(this->m_value); }
+  TL_OPTIONAL_11_CONSTEXPR T &&get() && { return std::move(this->m_value); }
 #ifndef TL_OPTIONAL_NO_CONSTRR
   constexpr const T &&get() const && { return std::move(this->m_value); }
 #endif
