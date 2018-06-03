@@ -237,9 +237,14 @@ TEST_CASE("Monadic operations", "[monadic]") {
     REQUIRE(!o18r);
 
     const tl::optional<int> o19 = tl::nullopt;
-    auto o19r =
-        std::move(o19).and_then([](int i) { return tl::make_optional(42); });
+    auto o19r = std::move(o19).and_then([](int i) { return tl::make_optional(42); });
     REQUIRE(!o19r);
+
+    int i = 3;
+    tl::optional<int&> o20{i};
+    std::move(o20).and_then([](int& r){return tl::optional<int&>{++r};});
+    REQUIRE(o20);
+    REQUIRE(i == 4);
   }
 
   SECTION("constexpr and_then") {
