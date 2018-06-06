@@ -38,6 +38,11 @@
 #define TL_OPTIONAL_GCC54
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4 &&              \
+     !defined(__clang__))
+#define TL_OPTIONAL_GCC55
+#endif
+
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
      !defined(__clang__))
 // GCC < 5 doesn't support overloading on const&& for member functions
@@ -639,7 +644,7 @@ public:
 // generic lambdas. C.f.
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0826r0.html
 #if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
-    !defined(TL_OPTIONAL_GCC54)
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored
   /// object if there is one. \requires `std::invoke(std::forward<F>(f),
@@ -754,7 +759,7 @@ public:
 #endif
 
 #if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
-    !defined(TL_OPTIONAL_GCC54)
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
   /// value())`. Returns a `std::optional<U>`. The return value is empty if
@@ -1679,7 +1684,7 @@ public:
 // generic lambdas. C.f.
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0826r0.html
 #if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
-    !defined(TL_OPTIONAL_GCC54)
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored
   /// object if there is one. \requires `std::invoke(std::forward<F>(f),
@@ -1794,7 +1799,7 @@ public:
 #endif
 
 #if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
-    !defined(TL_OPTIONAL_GCC54)
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
   /// value())`. Returns a `std::optional<U>`. The return value is empty if
