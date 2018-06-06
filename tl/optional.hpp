@@ -1604,7 +1604,8 @@ template <class T> optional(T)->optional<T>;
 
 /// \exclude
 namespace detail {
-#ifdef TL_OPTIONAL_CXX14
+#if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
 template <class Opt, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Opt>())),
