@@ -133,7 +133,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
   }
 
   SECTION("map constexpr") {
-#if !defined(_MSC_VER) && defined(TL_OPTIONAL_CXX14)
+#if !defined(_MSC_VER) && defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC55)
     // test each overload in turn
     constexpr tl::optional<int> o16 = 42;
     constexpr auto o16r = o16.map(get_int);
