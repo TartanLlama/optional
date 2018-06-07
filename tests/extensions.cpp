@@ -332,7 +332,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
   };
 
 #if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
-    !defined(TL_OPTIONAL_GCC54)
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
   SECTION("Issue #1") {
     tl::optional<foo> f = foo{};
     auto l = [](auto &&x) { x.non_const(); };
