@@ -38,7 +38,7 @@
 #define TL_OPTIONAL_GCC54
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4 &&              \
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 5 &&              \
      !defined(__clang__))
 #define TL_OPTIONAL_GCC55
 #endif
