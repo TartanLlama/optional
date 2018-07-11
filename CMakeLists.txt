@@ -23,6 +23,7 @@ if(OPTIONAL_ENABLE_TESTS)
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/relops.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/observers.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/extensions.cpp
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/emplace.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/constexpr.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/constructors.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment.cpp
