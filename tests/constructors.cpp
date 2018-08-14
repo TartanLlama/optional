@@ -1,5 +1,12 @@
 #include "catch.hpp"
 #include "optional.hpp"
+#include <vector>
+
+struct foo {
+  foo() = default;
+  foo(foo&) = delete;
+  foo(foo&&) {};
+};
 
 TEST_CASE("Constructors", "[constructors]") {
   tl::optional<int> o1;
@@ -47,4 +54,9 @@ TEST_CASE("Constructors", "[constructors]") {
     REQUIRE(oo);
     REQUIRE(*oo == 42);
   }
+
+  std::vector<foo> v;
+  v.emplace_back();
+  tl::optional<std::vector<foo>> ov = std::move(v);
+  REQUIRE(ov->size() == 1);
 }
