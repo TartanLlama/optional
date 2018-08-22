@@ -348,7 +348,7 @@ struct optional_storage_base {
   bool m_has_value;
 };
 
-// This case is for when T is not trivially destructible
+// This case is for when T is trivially destructible.
 template <class T> struct optional_storage_base<T, true> {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
       : m_dummy(), m_has_value(false) {}
