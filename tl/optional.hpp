@@ -321,8 +321,8 @@ struct is_nothrow_swappable
 #endif
 
 // The storage base manages the actual storage, and correctly propagates
-// trivial destruction from T This case is for when T is trivially
-// destructible
+// trivial destruction from T. This case is for when T is not trivially
+// destructible.
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
