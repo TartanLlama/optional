@@ -60,6 +60,7 @@
 // for non-copyable types
 #elif (defined(__GNUC__) && __GNUC__ < 8 &&                                                \
      !defined(__clang__))
+#ifdef _GLIBCXX_VECTOR
 #ifndef TL_GCC_LESS_8_TRIVIALLY_COPY_CONSTRUCTIBLE_MUTEX
 #define TL_GCC_LESS_8_TRIVIALLY_COPY_CONSTRUCTIBLE_MUTEX
 namespace tl {
@@ -71,6 +72,7 @@ namespace tl {
           : std::is_trivially_copy_constructible<T>{};
   }
 }
+#endif
 #endif
 
 #define TL_OPTIONAL_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
