@@ -8,7 +8,7 @@ MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/k5x00
 
 For example, instead of writing this code:
 
-```
+```c++
 std::optional<image> get_cute_cat (const image& img) {
     auto cropped = crop_to_cat(img);
     if (!cropped) {
@@ -31,7 +31,7 @@ std::optional<image> get_cute_cat (const image& img) {
 
 You can do this:
 
-```
+```c++
 tl::optional<image> get_cute_cat (const image& img) {
     return crop_to_cat(img)
            .and_then(add_bow_tie)
@@ -68,7 +68,7 @@ The interface is the same as `std::optional`, but the following member functions
 
 In addition to those member functions, optional references are also supported:
 
-```
+```c++
 int i = 42;
 tl::optional<int&> o = i;
 *o == 42; //true
@@ -79,7 +79,7 @@ i = 12;
 
 Assignment has rebind semantics rather than assign-through semantics:
 
-```
+```c++
 int j = 8;
 o = j;
 
@@ -103,7 +103,7 @@ Tested on:
   * g++ 8.0.1
   * g++ 7.3
   * g++ 6.4
-  * g++ 5.5  
+  * g++ 5.5
   * g++ 4.9
   * g++ 4.8
 - Windows
