@@ -142,7 +142,7 @@ struct conjunction<B, Bs...>
 #if defined(_LIBCPP_VERSION) && __cplusplus == 201103L
 #define TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
 #endif
-    
+
 // In C++11 mode, there's an issue in libc++'s std::mem_fn
 // which results in a hard-error when using it in a noexcept expression
 // in some cases. This is a check to workaround the common failing case.
@@ -161,8 +161,9 @@ struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...) volatile&> : std
 template <class T, class Ret, class... Args>
 struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...) volatile&&> : std::true_type{};        
 
-template <class T> struct is_ref_to_const : std::false_type{};
-template <class T> struct is_ref_to_const<T const&> : std::true_type{};
+template <class T> struct is_const_or_const_ref : std::false_type{};
+template <class T> struct is_const_or_const_ref<T const&> : std::true_type{};
+template <class T> struct is_const_or_const_ref<T const> : std::true_type{};    
 #endif
 
 // std::invoke from C++17
@@ -170,7 +171,7 @@ template <class T> struct is_ref_to_const<T const&> : std::true_type{};
 template <typename Fn, typename... Args,
 #ifdef TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
           typename = enable_if_t<!(is_pointer_to_non_const_member_func<Fn>::value 
-                                 && is_ref_to_const<Args...>::value)>, 
+                                 && is_const_or_const_ref<Args...>::value)>, 
 #endif
           typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
           int = 0>
