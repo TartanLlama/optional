@@ -139,6 +139,10 @@ template <class B, class... Bs>
 struct conjunction<B, Bs...>
     : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
 
+#if defined(_LIBCPP_VERSION) && __cplusplus == 201103L
+#define TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
+#endif
+    
 // In C++11 mode, there's an issue in libc++'s std::mem_fn
 // which results in a hard-error when using it in a noexcept expression
 // in some cases. This is a check to workaround the common failing case.
