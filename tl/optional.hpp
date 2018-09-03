@@ -139,9 +139,35 @@ template <class B, class... Bs>
 struct conjunction<B, Bs...>
     : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
 
+// In C++11 mode, there's an issue in libc++'s std::mem_fn
+// which results in a hard-error when using it in a noexcept expression
+// in some cases. This is a check to workaround the common failing case.
+#ifdef TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
+template <class T> struct is_pointer_to_non_const_member_func : std::false_type{};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...)> : std::true_type{};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...)&> : std::true_type{};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...)&&> : std::true_type{};        
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...) volatile> : std::true_type{};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...) volatile&> : std::true_type{};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...) volatile&&> : std::true_type{};        
+
+template <class T> struct is_ref_to_const : std::false_type{};
+template <class T> struct is_ref_to_const<T const&> : std::true_type{};
+#endif
+
 // std::invoke from C++17
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
 template <typename Fn, typename... Args,
+#ifdef TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
+          typename = enable_if_t<!(is_pointer_to_non_const_member_func<Fn>::value 
+                                 && is_ref_to_const<Args...>::value)>, 
+#endif
           typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
           int = 0>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
