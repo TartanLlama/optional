@@ -173,7 +173,7 @@ template <typename Fn, typename... Args,
           typename = enable_if_t<!(is_pointer_to_non_const_member_func<Fn>::value 
                                  && is_const_or_const_ref<Args...>::value)>, 
 #endif
-          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
+          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>::value>,
           int = 0>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
     noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
@@ -182,7 +182,7 @@ constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
 }
 
 template <typename Fn, typename... Args,
-          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
+          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>::value>>
 constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
     noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
     -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
