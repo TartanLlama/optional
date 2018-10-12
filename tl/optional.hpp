@@ -424,7 +424,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
       }
     }
 
-    if (rhs.has_value()) {
+    else if (rhs.has_value()) {
       construct(std::forward<Opt>(rhs).get());
     }
   }

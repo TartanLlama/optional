@@ -17,3 +17,18 @@ TEST_CASE("issue 14") {
     REQUIRE(*v == 42);
     REQUIRE((&f->i) == (&*v));
 }
+
+struct fail_on_copy_self {
+    int value;
+    fail_on_copy_self(int v) : value(v) {}
+    fail_on_copy_self(const fail_on_copy_self& other) : value(other.value) {
+        REQUIRE(&other != this);
+    }
+};
+
+TEST_CASE("issue 15") {
+    tl::optional<fail_on_copy_self> o = fail_on_copy_self(42);
+
+    o = o;
+    REQUIRE(o->value == 42);
+}
