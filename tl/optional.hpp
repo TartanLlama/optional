@@ -16,7 +16,7 @@
 #define TL_OPTIONAL_HPP
 
 #define TL_OPTIONAL_VERSION_MAJOR 0
-#define TL_OPTIONAL_VERSION_MINOR 2
+#define TL_OPTIONAL_VERSION_MINOR 5
 
 #include <exception>
 #include <functional>
