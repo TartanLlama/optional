@@ -66,8 +66,8 @@ namespace tl {
   namespace detail {
       template<class T>
       struct is_trivially_copy_constructible : std::is_trivially_copy_constructible<T>{};
-      template<class T, class A>
 #ifdef _GLIBCXX_VECTOR
+      template<class T, class A>
       struct is_trivially_copy_constructible<std::vector<T,A>>
           : std::is_trivially_copy_constructible<T>{};
 #endif      
