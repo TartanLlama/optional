@@ -1190,7 +1190,9 @@ public:
       class U, detail::enable_from_other<T, U, const U &> * = nullptr,
       detail::enable_if_t<std::is_convertible<const U &, T>::value> * = nullptr>
   optional(const optional<U> &rhs) {
-    this->construct(*rhs);
+    if (rhs.has_value()) {
+      this->construct(*rhs);
+    }
   }
 
   /// \exclude
@@ -1198,7 +1200,9 @@ public:
             detail::enable_if_t<!std::is_convertible<const U &, T>::value> * =
                 nullptr>
   explicit optional(const optional<U> &rhs) {
-    this->construct(*rhs);
+    if (rhs.has_value()) {
+      this->construct(*rhs);
+    }
   }
 
   /// Converting move constructor.
@@ -1207,7 +1211,9 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr>
   optional(optional<U> &&rhs) {
-    this->construct(std::move(*rhs));
+    if (rhs.has_value()) {
+      this->construct(std::move(*rhs));
+    }
   }
 
   /// \exclude
@@ -1215,7 +1221,9 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr>
   explicit optional(optional<U> &&rhs) {
-    this->construct(std::move(*rhs));
+    if (rhs.has_value()) {
+      this->construct(std::move(*rhs));
+    }
   }
 
   /// Destroys the stored value if there is one.
