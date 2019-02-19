@@ -204,6 +204,79 @@ using invoke_result = invoke_result_impl<F, void, Us...>;
 
 template <class F, class... Us>
 using invoke_result_t = typename invoke_result<F, Us...>::type;
+
+#if defined(_MSC_VER) && _MSC_VER <= 1900
+// TODO make a version which works with MSVC 2015
+template <class T, class U = T> struct is_swappable : std::true_type {};
+
+template <class T, class U = T> struct is_nothrow_swappable : std::true_type {};
+#else
+// https://stackoverflow.com/questions/26744589/what-is-a-proper-way-to-implement-is-swappable-to-test-for-the-swappable-concept
+namespace swap_adl_tests {
+// if swap ADL finds this then it would call std::swap otherwise (same
+// signature)
+struct tag {};
+
+template <class T> tag swap(T &, T &);
+template <class T, std::size_t N> tag swap(T (&a)[N], T (&b)[N]);
+
+// helper functions to test if an unqualified swap is possible, and if it
+// becomes std::swap
+template <class, class> std::false_type can_swap(...) noexcept(false);
+template <class T, class U,
+          class = decltype(swap(std::declval<T &>(), std::declval<U &>()))>
+std::true_type can_swap(int) noexcept(noexcept(swap(std::declval<T &>(),
+                                                    std::declval<U &>())));
+
+template <class, class> std::false_type uses_std(...);
+template <class T, class U>
+std::is_same<decltype(swap(std::declval<T &>(), std::declval<U &>())), tag>
+uses_std(int);
+
+template <class T>
+struct is_std_swap_noexcept
+    : std::integral_constant<bool,
+                             std::is_nothrow_move_constructible<T>::value &&
+                                 std::is_nothrow_move_assignable<T>::value> {};
+
+template <class T, std::size_t N>
+struct is_std_swap_noexcept<T[N]> : is_std_swap_noexcept<T> {};
+
+template <class T, class U>
+struct is_adl_swap_noexcept
+    : std::integral_constant<bool, noexcept(can_swap<T, U>(0))> {};
+} // namespace swap_adl_tests
+
+template <class T, class U = T>
+struct is_swappable
+    : std::integral_constant<
+          bool,
+          decltype(detail::swap_adl_tests::can_swap<T, U>(0))::value &&
+              (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value ||
+               (std::is_move_assignable<T>::value &&
+                std::is_move_constructible<T>::value))> {};
+
+template <class T, std::size_t N>
+struct is_swappable<T[N], T[N]>
+    : std::integral_constant<
+          bool,
+          decltype(detail::swap_adl_tests::can_swap<T[N], T[N]>(0))::value &&
+              (!decltype(
+                   detail::swap_adl_tests::uses_std<T[N], T[N]>(0))::value ||
+               is_swappable<T, T>::value)> {};
+
+template <class T, class U = T>
+struct is_nothrow_swappable
+    : std::integral_constant<
+          bool,
+          is_swappable<T, U>::value &&
+              ((decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value
+                    &&detail::swap_adl_tests::is_std_swap_noexcept<T>::value) ||
+               (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value &&
+                    detail::swap_adl_tests::is_adl_swap_noexcept<T,
+                                                                 U>::value))> {
+};
+#endif
 #endif
 
 // std::void_t from C++17
@@ -277,79 +350,6 @@ using enable_assign_from_other = detail::enable_if_t<
     !std::is_assignable<T &, optional<U> &&>::value &&
     !std::is_assignable<T &, const optional<U> &>::value &&
     !std::is_assignable<T &, const optional<U> &&>::value>;
-
-#if defined(_MSC_VER) && _MSC_VER < 1900
-// TODO make a version which works with MSVC 2015
-template <class T, class U = T> struct is_swappable : std::true_type {};
-
-template <class T, class U = T> struct is_nothrow_swappable : std::true_type {};
-#else
-// https://stackoverflow.com/questions/26744589/what-is-a-proper-way-to-implement-is-swappable-to-test-for-the-swappable-concept
-namespace swap_adl_tests {
-// if swap ADL finds this then it would call std::swap otherwise (same
-// signature)
-struct tag {};
-
-template <class T> tag swap(T &, T &);
-template <class T, std::size_t N> tag swap(T (&a)[N], T (&b)[N]);
-
-// helper functions to test if an unqualified swap is possible, and if it
-// becomes std::swap
-template <class, class> std::false_type can_swap(...) noexcept(false);
-template <class T, class U,
-          class = decltype(swap(std::declval<T &>(), std::declval<U &>()))>
-std::true_type can_swap(int) noexcept(noexcept(swap(std::declval<T &>(),
-                                                    std::declval<U &>())));
-
-template <class, class> std::false_type uses_std(...);
-template <class T, class U>
-std::is_same<decltype(swap(std::declval<T &>(), std::declval<U &>())), tag>
-uses_std(int);
-
-template <class T>
-struct is_std_swap_noexcept
-    : std::integral_constant<bool,
-                             std::is_nothrow_move_constructible<T>::value &&
-                                 std::is_nothrow_move_assignable<T>::value> {};
-
-template <class T, std::size_t N>
-struct is_std_swap_noexcept<T[N]> : is_std_swap_noexcept<T> {};
-
-template <class T, class U>
-struct is_adl_swap_noexcept
-    : std::integral_constant<bool, noexcept(can_swap<T, U>(0))> {};
-} // namespace swap_adl_tests
-
-template <class T, class U = T>
-struct is_swappable
-    : std::integral_constant<
-          bool,
-          decltype(detail::swap_adl_tests::can_swap<T, U>(0))::value &&
-              (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value ||
-               (std::is_move_assignable<T>::value &&
-                std::is_move_constructible<T>::value))> {};
-
-template <class T, std::size_t N>
-struct is_swappable<T[N], T[N]>
-    : std::integral_constant<
-          bool,
-          decltype(detail::swap_adl_tests::can_swap<T[N], T[N]>(0))::value &&
-              (!decltype(
-                   detail::swap_adl_tests::uses_std<T[N], T[N]>(0))::value ||
-               is_swappable<T, T>::value)> {};
-
-template <class T, class U = T>
-struct is_nothrow_swappable
-    : std::integral_constant<
-          bool,
-          is_swappable<T, U>::value &&
-              ((decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value
-                    &&detail::swap_adl_tests::is_std_swap_noexcept<T>::value) ||
-               (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value &&
-                    detail::swap_adl_tests::is_adl_swap_noexcept<T,
-                                                                 U>::value))> {
-};
-#endif
 
 // The storage base manages the actual storage, and correctly propagates
 // trivial destruction from T. This case is for when T is not trivially
