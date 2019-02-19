@@ -278,8 +278,8 @@ using enable_assign_from_other = detail::enable_if_t<
     !std::is_assignable<T &, const optional<U> &>::value &&
     !std::is_assignable<T &, const optional<U> &&>::value>;
 
-#ifdef _MSC_VER
-// TODO make a version which works with MSVC
+#if defined(_MSC_VER) && _MSC_VER < 1900
+// TODO make a version which works with MSVC 2015
 template <class T, class U = T> struct is_swappable : std::true_type {};
 
 template <class T, class U = T> struct is_nothrow_swappable : std::true_type {};
