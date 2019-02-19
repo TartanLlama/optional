@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 project(optional)
 
 option(OPTIONAL_ENABLE_TESTS "Enable tests." ON)
-option(OPTIONAL_ENABLE_DOCS "Enable documentation." ON)
+option(OPTIONAL_ENABLE_DOCS "Enable documentation." OFF)
 
 add_library(optional INTERFACE)
 target_sources(optional INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tl/optional.hpp)
