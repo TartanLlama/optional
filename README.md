@@ -41,7 +41,7 @@ tl::optional<image> get_cute_cat (const image& img) {
 }
 ```
 
-Full documentation available at [optional.tartanllama.xyz](https://optional.tartanllama.xyz)
+Full documentation available at [tl.tartanllama.xyz](https://tl.tartanllama.xyz)
 
 The interface is the same as `std::optional`, but the following member functions are also defined. Explicit types are for clarity.
 

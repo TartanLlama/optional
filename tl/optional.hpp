@@ -1,7 +1,7 @@
 
 ///
 // optional - An implementation of std::optional with extensions
-// Written in 2017 by Simon Brand (@TartanLlama)
+// Written in 2017 by Simon Brand (tartanllama@gmail.com, @TartanLlama)
 //
 // To the extent possible under law, the author(s) have dedicated all
 // copyright and related and neighboring rights to this software to the
@@ -16,7 +16,7 @@
 #define TL_OPTIONAL_HPP
 
 #define TL_OPTIONAL_VERSION_MAJOR 0
-#define TL_OPTIONAL_VERSION_MINOR 2
+#define TL_OPTIONAL_VERSION_MINOR 5
 
 #include <exception>
 #include <functional>
@@ -66,8 +66,8 @@ namespace tl {
   namespace detail {
       template<class T>
       struct is_trivially_copy_constructible : std::is_trivially_copy_constructible<T>{};
-      template<class T, class A>
 #ifdef _GLIBCXX_VECTOR
+      template<class T, class A>
       struct is_trivially_copy_constructible<std::vector<T,A>>
           : std::is_trivially_copy_constructible<T>{};
 #endif      
@@ -1190,7 +1190,9 @@ public:
       class U, detail::enable_from_other<T, U, const U &> * = nullptr,
       detail::enable_if_t<std::is_convertible<const U &, T>::value> * = nullptr>
   optional(const optional<U> &rhs) {
-    this->construct(*rhs);
+    if (rhs.has_value()) {
+      this->construct(*rhs);
+    }
   }
 
   /// \exclude
@@ -1198,7 +1200,9 @@ public:
             detail::enable_if_t<!std::is_convertible<const U &, T>::value> * =
                 nullptr>
   explicit optional(const optional<U> &rhs) {
-    this->construct(*rhs);
+    if (rhs.has_value()) {
+      this->construct(*rhs);
+    }
   }
 
   /// Converting move constructor.
@@ -1207,7 +1211,9 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr>
   optional(optional<U> &&rhs) {
-    this->construct(std::move(*rhs));
+    if (rhs.has_value()) {
+      this->construct(std::move(*rhs));
+    }
   }
 
   /// \exclude
@@ -1215,7 +1221,9 @@ public:
       class U, detail::enable_from_other<T, U, U &&> * = nullptr,
       detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr>
   explicit optional(optional<U> &&rhs) {
-    this->construct(std::move(*rhs));
+    if (rhs.has_value()) {
+      this->construct(std::move(*rhs));
+    }
   }
 
   /// Destroys the stored value if there is one.
@@ -2252,6 +2260,7 @@ public:
 
     *this = nullopt;
     this->construct(std::forward<Args>(args)...);
+    return value();
   }
 
   /// Swaps this optional with the other.
