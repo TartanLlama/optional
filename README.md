@@ -1,8 +1,10 @@
 # optional
+
 Single header implementation of `std::optional` with functional-style extensions and support for references.
 
 Clang + GCC: [![Linux Build Status](https://travis-ci.org/TartanLlama/optional.png?branch=master)](https://travis-ci.org/TartanLlama/optional)
 MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/k5x00xa11y3s5wsg?svg=true)](https://ci.appveyor.com/project/TartanLlama/optional)
+[![Documentation Status](https://readthedocs.org/projects/tl-docs/badge/?version=latest)](https://tl.tartanllama.xyz/en/latest/?badge=latest)
 
 `std::optional` is the preferred way to represent an object which may or may not have a value. Unfortunately, chaining together many computations which may or may not produce a value can be verbose, as empty-checking code will be mixed in with the actual programming logic. This implementation provides a number of utilities to make coding with `optional` cleaner.
 
@@ -40,8 +42,6 @@ tl::optional<image> get_cute_cat (const image& img) {
            .map(add_rainbow);
 }
 ```
-
-Full documentation available at [tl.tartanllama.xyz](https://tl.tartanllama.xyz)
 
 The interface is the same as `std::optional`, but the following member functions are also defined. Explicit types are for clarity.
 
