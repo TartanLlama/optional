@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.0)
 project(optional)
 
 option(OPTIONAL_ENABLE_TESTS "Enable tests." ON)
-option(OPTIONAL_ENABLE_DOCS "Enable documentation." OFF)
 
 add_library(optional INTERFACE)
 target_sources(optional INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tl/optional.hpp)
@@ -39,14 +38,3 @@ if(OPTIONAL_ENABLE_TESTS)
   set_property(TARGET tests PROPERTY CXX_STANDARD ${CXXSTD})
 endif()
 
-if(OPTIONAL_ENABLE_DOCS)
-  find_package(standardese) # find standardese after installation
-
-  # generates a custom target that will run standardese to generate the documentation
-  if(standardese_FOUND)
-    standardese_generate(optional
-                         INCLUDE_DIRECTORY tl
-                         CONFIG ${CMAKE_CURRENT_SOURCE_DIR}/standardese.config
-                         INPUT tl/optional.hpp)
-  endif()
-endif()
