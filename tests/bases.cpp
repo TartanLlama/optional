@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "optional.hpp"
+#include <tl/optional.hpp>
 
 // Old versions of GCC don't have the correct trait names. Could fix them up if needs be.
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \

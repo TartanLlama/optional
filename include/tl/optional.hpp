@@ -15,8 +15,9 @@
 #ifndef TL_OPTIONAL_HPP
 #define TL_OPTIONAL_HPP
 
-#define TL_OPTIONAL_VERSION_MAJOR 0
-#define TL_OPTIONAL_VERSION_MINOR 5
+#define TL_OPTIONAL_VERSION_MAJOR 1
+#define TL_OPTIONAL_VERSION_MINOR 0
+#define TL_OPTIONAL_VERSION_PATCH 0
 
 #include <exception>
 #include <functional>

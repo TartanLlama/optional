@@ -1,12 +1,14 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8)
 
-project(optional)
+project(tl-optional VERSION 1.0.0 LANGUAGES CXX)
 
 option(OPTIONAL_ENABLE_TESTS "Enable tests." ON)
 
-add_library(optional INTERFACE)
-target_sources(optional INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tl/optional.hpp)
-target_include_directories(optional INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tl)
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/tl-cmake" ${CMAKE_MODULE_PATH})
+include(add-tl)
+
+tl_add_library(optional SOURCES 
+                include/tl/optional.hpp)
 
 if(OPTIONAL_ENABLE_TESTS)
   # Prepare "Catch" library for other executables
