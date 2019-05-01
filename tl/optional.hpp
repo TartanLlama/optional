@@ -893,6 +893,85 @@ public:
 #endif
 #endif
 
+#if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `optional<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned.
+  ///
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) &;
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto transform(F&& f) & {
+    return optional_map_impl(*this, std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) &&;
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto transform(F&& f) && {
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) const&;
+  template <class F> constexpr auto transform(F&& f) const & {
+    return optional_map_impl(*this, std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) const&&;
+  template <class F> constexpr auto transform(F&& f) const && {
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+#else
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `optional<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned.
+  ///
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) &;
+  template <class F>
+  TL_OPTIONAL_11_CONSTEXPR decltype(optional_map_impl(std::declval<optional&>(),
+    std::declval<F&&>()))
+    transform(F&& f) & {
+    return optional_map_impl(*this, std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) &&;
+  template <class F>
+  TL_OPTIONAL_11_CONSTEXPR decltype(optional_map_impl(std::declval<optional&&>(),
+    std::declval<F&&>()))
+    transform(F&& f) && {
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) const&;
+  template <class F>
+  constexpr decltype(optional_map_impl(std::declval<const optional&>(),
+    std::declval<F&&>()))
+    transform(F&& f) const & {
+    return optional_map_impl(*this, std::forward<F>(f));
+  }
+
+#ifndef TL_OPTIONAL_NO_CONSTRR
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) const&&;
+  template <class F>
+  constexpr decltype(optional_map_impl(std::declval<const optional&&>(),
+    std::declval<F&&>()))
+    transform(F&& f) const && {
+    return optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
+#endif
+
   /// \brief Calls `f` if the optional is empty
   /// \requires `std::invoke_result_t<F>` must be void or convertible to
   /// `optional<T>`.
@@ -1938,6 +2017,85 @@ public:
   constexpr decltype(detail::optional_map_impl(std::declval<const optional &&>(),
                                       std::declval<F &&>()))
   map(F &&f) const && {
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
+#endif
+
+#if defined(TL_OPTIONAL_CXX14) && !defined(TL_OPTIONAL_GCC49) &&               \
+    !defined(TL_OPTIONAL_GCC54) && !defined(TL_OPTIONAL_GCC55)
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `optional<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned.
+  ///
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) &;
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto transform(F&& f) & {
+    return detail::optional_map_impl(*this, std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) &&;
+  template <class F> TL_OPTIONAL_11_CONSTEXPR auto transform(F&& f) && {
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) const&;
+  template <class F> constexpr auto transform(F&& f) const & {
+    return detail::optional_map_impl(*this, std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> constexpr auto transform(F &&f) const&&;
+  template <class F> constexpr auto transform(F&& f) const && {
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+#else
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::optional<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `optional<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned.
+  ///
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) &;
+  template <class F>
+  TL_OPTIONAL_11_CONSTEXPR decltype(detail::optional_map_impl(std::declval<optional&>(),
+    std::declval<F&&>()))
+    transform(F&& f) & {
+    return detail::optional_map_impl(*this, std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) &&;
+  template <class F>
+  TL_OPTIONAL_11_CONSTEXPR decltype(detail::optional_map_impl(std::declval<optional&&>(),
+    std::declval<F&&>()))
+    transform(F&& f) && {
+    return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) const&;
+  template <class F>
+  constexpr decltype(detail::optional_map_impl(std::declval<const optional&>(),
+    std::declval<F&&>()))
+    transform(F&& f) const & {
+    return detail::optional_map_impl(*this, std::forward<F>(f));
+  }
+
+#ifndef TL_OPTIONAL_NO_CONSTRR
+  /// \group map
+  /// \synopsis template <class F> auto transform(F &&f) const&&;
+  template <class F>
+  constexpr decltype(detail::optional_map_impl(std::declval<const optional&&>(),
+    std::declval<F&&>()))
+    transform(F&& f) const && {
     return detail::optional_map_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
