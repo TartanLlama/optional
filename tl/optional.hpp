@@ -1032,31 +1032,11 @@ public:
 #endif
 
   /// Takes the value out of the optional, leaving it empty
-  optional take() & {
-    optional ret = *this;
-    reset();
-    return ret;
-  }
-
-  optional take() const & {
-    optional ret = *this;
-    reset();
-    return ret;
-  }
-
-  optional take() && {
+  optional take() {
     optional ret = std::move(*this);
     reset();
     return ret;
   }
-
-#ifndef TL_OPTIONAL_NO_CONSTRR
-  optional take() const && {
-    optional ret = std::move(*this);
-    reset();
-    return ret;
-  }
-#endif
 
   using value_type = T;
 
@@ -1926,31 +1906,11 @@ public:
 #endif
 
   /// Takes the value out of the optional, leaving it empty
-  optional take() & {
-    optional ret = *this;
-    reset();
-    return ret;
-  }
-
-  optional take() const & {
-    optional ret = *this;
-    reset();
-    return ret;
-  }
-
-  optional take() && {
+  optional take() {
     optional ret = std::move(*this);
     reset();
     return ret;
   }
-
-#ifndef TL_OPTIONAL_NO_CONSTRR
-  optional take() const && {
-    optional ret = std::move(*this);
-    reset();
-    return ret;
-  }
-#endif
 
   using value_type = T &;
 
