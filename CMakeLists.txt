@@ -28,7 +28,8 @@ if(OPTIONAL_ENABLE_TESTS)
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/issues.cpp  
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/bases.cpp
-                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/nullopt.cpp)
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/nullopt.cpp
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/swap.cpp)
 
   add_executable(tests ${TEST_SOURCES})
 
