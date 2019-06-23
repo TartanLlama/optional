@@ -100,6 +100,7 @@ Tested on:
   * clang 3.7
   * clang 3.6
   * clang 3.5
+  * g++ 9.1.0
   * g++ 8.0.1
   * g++ 7.3
   * g++ 6.4
