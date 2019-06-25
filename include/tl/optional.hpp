@@ -1,7 +1,9 @@
 
 ///
 // optional - An implementation of std::optional with extensions
-// Written in 2017 by Simon Brand (tartanllama@gmail.com, @TartanLlama)
+// Written in 2017 by Simon Brand (simonrbrand@gmail.com, @TartanLlama)
+//
+// Documentation available at https://tl.tartanllama.xyz/
 //
 // To the extent possible under law, the author(s) have dedicated all
 // copyright and related and neighboring rights to this software to the
