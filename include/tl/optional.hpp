@@ -15,8 +15,9 @@
 #ifndef TL_OPTIONAL_HPP
 #define TL_OPTIONAL_HPP
 
-#define TL_OPTIONAL_VERSION_MAJOR 0
-#define TL_OPTIONAL_VERSION_MINOR 5
+#define TL_OPTIONAL_VERSION_MAJOR 1
+#define TL_OPTIONAL_VERSION_MINOR 0
+#define TL_OPTIONAL_VERSION_PATCH 0
 
 #include <exception>
 #include <functional>
@@ -137,13 +138,13 @@ struct conjunction<B, Bs...>
     : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
 
 #if defined(_LIBCPP_VERSION) && __cplusplus == 201103L
-#define TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
+#define TL_TRAITS_LIBCXX_MEM_FN_WORKAROUND
 #endif
 
 // In C++11 mode, there's an issue in libc++'s std::mem_fn
 // which results in a hard-error when using it in a noexcept expression
 // in some cases. This is a check to workaround the common failing case.
-#ifdef TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
+#ifdef TL_TRAITS_LIBCXX_MEM_FN_WORKAROUND
 template <class T> struct is_pointer_to_non_const_member_func : std::false_type{};
 template <class T, class Ret, class... Args>
 struct is_pointer_to_non_const_member_func<Ret (T::*) (Args...)> : std::true_type{};
@@ -166,7 +167,7 @@ template <class T> struct is_const_or_const_ref<T const> : std::true_type{};
 // std::invoke from C++17
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
 template <typename Fn, typename... Args,
-#ifdef TL_OPTIONAL_LIBCXX_MEM_FN_WORKAROUND
+#ifdef TL_TRAITS_LIBCXX_MEM_FN_WORKAROUND
           typename = enable_if_t<!(is_pointer_to_non_const_member_func<Fn>::value 
                                  && is_const_or_const_ref<Args...>::value)>, 
 #endif

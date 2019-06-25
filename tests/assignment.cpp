@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "optional.hpp"
+#include <tl/optional.hpp>
 
 TEST_CASE("Assignment value", "[assignment.value]") {
     tl::optional<int> o1 = 42;
