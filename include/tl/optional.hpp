@@ -1239,9 +1239,9 @@ public:
   void
   swap(optional &rhs) noexcept(std::is_nothrow_move_constructible<T>::value
                                    &&detail::is_nothrow_swappable<T>::value) {
+    using std::swap;
     if (has_value()) {
       if (rhs.has_value()) {
-        using std::swap;
         swap(**this, *rhs);
       } else {
         new (std::addressof(rhs.m_value)) T(std::move(this->m_value));
@@ -1251,6 +1251,7 @@ public:
       new (std::addressof(this->m_value)) T(std::move(rhs.m_value));
       rhs.m_value.T::~T();
     }
+    swap(this->m_has_value, rhs.m_has_value);
   }
 
   /// Returns a pointer to the stored value
