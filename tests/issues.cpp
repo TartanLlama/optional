@@ -32,3 +32,14 @@ TEST_CASE("issue 15") {
     o = o;
     REQUIRE(o->value == 42);
 }
+
+TEST_CASE("issue 33") {
+    int i = 0;
+    int j = 0;
+    tl::optional<int&> a = i;
+    a.emplace(j);
+    *a = 42;
+    REQUIRE(j == 42);
+    REQUIRE(*a == 42);
+    REQUIRE(a.has_value());
+}

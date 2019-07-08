@@ -1939,12 +1939,12 @@ public:
   template <class U = T,
             detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value>
                 * = nullptr>
-  constexpr optional(U &&u) : m_value(std::addressof(u)) {
+  constexpr optional(U &&u)  noexcept : m_value(std::addressof(u)) {
     static_assert(std::is_lvalue_reference<U>::value, "U must be an lvalue");
   }
 
   template <class U>
-  constexpr explicit optional(const optional<U> &rhs) : optional(*rhs) {}
+  constexpr explicit optional(const optional<U> &rhs) noexcept : optional(*rhs) {}
 
   /// No-op
   ~optional() = default;
@@ -1977,33 +1977,30 @@ public:
   ///
   /// Rebinds this optional to the referee of `rhs` if there is one. Otherwise
   /// resets the stored value in `*this`.
-  template <class U> optional &operator=(const optional<U> &rhs) {
+  template <class U> optional &operator=(const optional<U> &rhs) noexcept {
     m_value = std::addressof(rhs.value());
     return *this;
   }
 
-  /// Constructs the value in-place, destroying the current one if there is
-  /// one.
-  template <class... Args> T &emplace(Args &&... args) noexcept {
-    static_assert(std::is_constructible<T, Args &&...>::value,
-                  "T must be constructible with Args");
-
-    *this = nullopt;
-    this->construct(std::forward<Args>(args)...);
-    return value();
+  /// Rebinds this optional to `u`.
+  template <class U = T,
+            detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value>
+                * = nullptr>
+  optional &emplace(U &&u) noexcept {
+    return *this = std::forward<U>(u);
   }
 
   void swap(optional &rhs) noexcept { std::swap(m_value, rhs.m_value); }
 
   /// Returns a pointer to the stored value
-  constexpr const T *operator->() const { return m_value; }
+  constexpr const T *operator->() const noexcept { return m_value; }
 
-  TL_OPTIONAL_11_CONSTEXPR T *operator->() { return m_value; }
+  TL_OPTIONAL_11_CONSTEXPR T *operator->() noexcept { return m_value; }
 
   /// Returns the stored value
-  TL_OPTIONAL_11_CONSTEXPR T &operator*() { return *m_value; }
+  TL_OPTIONAL_11_CONSTEXPR T &operator*() noexcept { return *m_value; }
 
-  constexpr const T &operator*() const { return *m_value; }
+  constexpr const T &operator*() const noexcept { return *m_value; }
 
   constexpr bool has_value() const noexcept { return m_value != nullptr; }
 
@@ -2024,7 +2021,7 @@ public:
   }
 
   /// Returns the stored value if there is one, otherwise returns `u`
-  template <class U> constexpr T value_or(U &&u) const & {
+  template <class U> constexpr T value_or(U &&u) const & noexcept {
     static_assert(std::is_copy_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be copy constructible and convertible from U");
@@ -2032,7 +2029,7 @@ public:
   }
 
   /// \group value_or
-  template <class U> TL_OPTIONAL_11_CONSTEXPR T value_or(U &&u) && {
+  template <class U> TL_OPTIONAL_11_CONSTEXPR T value_or(U &&u) && noexcept {
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be move constructible and convertible from U");
