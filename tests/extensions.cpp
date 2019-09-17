@@ -2,12 +2,6 @@
 #include <tl/optional.hpp>
 #include <string>
 
-#define TOKENPASTE(x, y) x##y
-#define TOKENPASTE2(x, y) TOKENPASTE(x, y)
-#define STATIC_REQUIRE(e)                                                      \
-  constexpr bool TOKENPASTE2(rqure, __LINE__) = e;                             \
-  REQUIRE(e);
-
 constexpr int get_int(int) { return 42; }
 TL_OPTIONAL_11_CONSTEXPR tl::optional<int> get_opt_int(int) { return 42; }
 
@@ -49,7 +43,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
 
     // test void return
     tl::optional<int> o7 = 40;
-    auto f7 = [](const int &i) { return; };
+    auto f7 = [](const int &) { return; };
     auto o7r = o7.map(f7);
     STATIC_REQUIRE(
         (std::is_same<decltype(o7r), tl::optional<tl::monostate>>::value));
@@ -188,7 +182,7 @@ TEST_CASE("Monadic operations", "[monadic]") {
 
     // test void return
     tl::optional<int> o7 = 40;
-    auto f7 = [](const int& i) { return; };
+    auto f7 = [](const int&) { return; };
     auto o7r = o7.transform(f7);
     STATIC_REQUIRE(
       (std::is_same<decltype(o7r), tl::optional<tl::monostate>>::value));
@@ -295,25 +289,25 @@ TEST_CASE("Monadic operations", "[monadic]") {
 
     // lhs is empty
     tl::optional<int> o1;
-    auto o1r = o1.and_then([](int i) { return tl::optional<float>{42}; });
+    auto o1r = o1.and_then([](int) { return tl::optional<float>{42}; });
     STATIC_REQUIRE((std::is_same<decltype(o1r), tl::optional<float>>::value));
     REQUIRE(!o1r);
 
     // lhs has value
     tl::optional<int> o2 = 12;
-    auto o2r = o2.and_then([](int i) { return tl::optional<float>{42}; });
+    auto o2r = o2.and_then([](int) { return tl::optional<float>{42}; });
     STATIC_REQUIRE((std::is_same<decltype(o2r), tl::optional<float>>::value));
     REQUIRE(o2r.value() == 42.f);
 
     // lhs is empty, rhs returns empty
     tl::optional<int> o3;
-    auto o3r = o3.and_then([](int i) { return tl::optional<float>{}; });
+    auto o3r = o3.and_then([](int) { return tl::optional<float>{}; });
     STATIC_REQUIRE((std::is_same<decltype(o3r), tl::optional<float>>::value));
     REQUIRE(!o3r);
 
     // rhs returns empty
     tl::optional<int> o4 = 12;
-    auto o4r = o4.and_then([](int i) { return tl::optional<float>{}; });
+    auto o4r = o4.and_then([](int) { return tl::optional<float>{}; });
     STATIC_REQUIRE((std::is_same<decltype(o4r), tl::optional<float>>::value));
     REQUIRE(!o4r);
 
@@ -345,38 +339,38 @@ TEST_CASE("Monadic operations", "[monadic]") {
 
     // test each overload in turn
     tl::optional<int> o8 = 42;
-    auto o8r = o8.and_then([](int i) { return tl::make_optional(42); });
+    auto o8r = o8.and_then([](int) { return tl::make_optional(42); });
     REQUIRE(*o8r == 42);
 
     tl::optional<int> o9 = 42;
     auto o9r =
-        std::move(o9).and_then([](int i) { return tl::make_optional(42); });
+        std::move(o9).and_then([](int) { return tl::make_optional(42); });
     REQUIRE(*o9r == 42);
 
     const tl::optional<int> o10 = 42;
-    auto o10r = o10.and_then([](int i) { return tl::make_optional(42); });
+    auto o10r = o10.and_then([](int) { return tl::make_optional(42); });
     REQUIRE(*o10r == 42);
 
     const tl::optional<int> o11 = 42;
     auto o11r =
-        std::move(o11).and_then([](int i) { return tl::make_optional(42); });
+        std::move(o11).and_then([](int) { return tl::make_optional(42); });
     REQUIRE(*o11r == 42);
 
     tl::optional<int> o16 = tl::nullopt;
-    auto o16r = o16.and_then([](int i) { return tl::make_optional(42); });
+    auto o16r = o16.and_then([](int) { return tl::make_optional(42); });
     REQUIRE(!o16r);
 
     tl::optional<int> o17 = tl::nullopt;
     auto o17r =
-        std::move(o17).and_then([](int i) { return tl::make_optional(42); });
+        std::move(o17).and_then([](int) { return tl::make_optional(42); });
     REQUIRE(!o17r);
 
     const tl::optional<int> o18 = tl::nullopt;
-    auto o18r = o18.and_then([](int i) { return tl::make_optional(42); });
+    auto o18r = o18.and_then([](int) { return tl::make_optional(42); });
     REQUIRE(!o18r);
 
     const tl::optional<int> o19 = tl::nullopt;
-    auto o19r = std::move(o19).and_then([](int i) { return tl::make_optional(42); });
+    auto o19r = std::move(o19).and_then([](int) { return tl::make_optional(42); });
     REQUIRE(!o19r);
 
     int i = 3;
