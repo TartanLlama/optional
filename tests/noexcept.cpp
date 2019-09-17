@@ -48,7 +48,7 @@ TEST_CASE("Noexcept", "[noexcept]") {
 
   SECTION("constructors") {
       //TODO see why this fails
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
+#if !defined(_MSC_VER) || _MSC_VER > 1900
     REQUIRE(noexcept(tl::optional<int>{}));
     REQUIRE(noexcept(tl::optional<int>{tl::nullopt}));
 
