@@ -56,10 +56,10 @@ The interface is the same as `std::optional`, but the following member functions
   * `tl::optional<std::size_t> s = opt_string.map_or(&std::string::size, 0);`
 - `map_or_else`: carries out a `map` if there is a value, otherwise returns the result of a given default function.
   * `std::size_t get_default();`
-  * `tl::optional<std::size_t> s = opt_string.map_or(&std::string::size, get_default);`
+  * `tl::optional<std::size_t> s = opt_string.map_or_else(&std::string::size, get_default);`
 - `conjunction`: returns the argument if a value is stored in the optional, otherwise an empty optional.
   * `tl::make_optional(42).conjunction(13); //13`
-  * `tl::optional<int>){}.conjunction(13); //empty`
+  * `tl::optional<int>{}.conjunction(13); //empty`
 - `disjunction`: returns the argument if the optional is empty, otherwise the current value.
   * `tl::make_optional(42).disjunction(13); //42`
   * `tl::optional<int>{}.disjunction(13); //13`
@@ -73,7 +73,7 @@ int i = 42;
 tl::optional<int&> o = i;
 *o == 42; //true
 i = 12;
-*o = 12; //true
+*o == 12; //true
 &*o == &i; //true
 ```
 
