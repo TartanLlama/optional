@@ -24,6 +24,7 @@ struct fail_on_copy_self {
     fail_on_copy_self(const fail_on_copy_self& other) : value(other.value) {
         REQUIRE(&other != this);
     }
+    fail_on_copy_self& operator=(const fail_on_copy_self&) = default;
 };
 
 TEST_CASE("issue 15") {

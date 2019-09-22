@@ -6,6 +6,6 @@ build_script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DOPTIONAL_WERROR=ON ..
   - cmake --build .
   - C:\projects\optional\build\Debug\tests.exe

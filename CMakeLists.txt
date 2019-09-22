@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 project(tl-optional VERSION 1.0.0 LANGUAGES CXX)
 
 option(OPTIONAL_ENABLE_TESTS "Enable tests." ON)
+option(OPTIONAL_WERROR "Turn compiler warnings into errors" OFF)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -16,7 +17,7 @@ if(NOT tl_cmake_POPULATED)
 endif()
 include(add-tl)
 
-tl_add_library(optional SOURCES 
+tl_add_library(optional SOURCES
                 include/tl/optional.hpp)
 
 if(OPTIONAL_ENABLE_TESTS)
@@ -37,7 +38,7 @@ if(OPTIONAL_ENABLE_TESTS)
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/constexpr.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/constructors.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment.cpp
-                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/issues.cpp  
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/issues.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/bases.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/nullopt.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/swap.cpp)
@@ -50,3 +51,10 @@ if(OPTIONAL_ENABLE_TESTS)
   set_property(TARGET tests PROPERTY CXX_STANDARD ${CXXSTD})
 endif()
 
+if(OPTIONAL_WERROR)
+  if(MSVC)
+    target_compile_options(optional INTERFACE /W3 /WX)
+  else()
+    target_compile_options(optional INTERFACE -Wall -Wextra -pedantic -Werror)
+  endif()
+endif()

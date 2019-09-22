@@ -44,6 +44,14 @@ matrix:
           sources:
              - ubuntu-toolchain-r-test
           packages:
+             - g++-9
+      env: COMPILER=g++-9 CXXSTD=11
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
              - g++-4.9
       env: COMPILER=g++-4.9 CXXSTD=11
     - compiler: gcc
@@ -168,6 +176,14 @@ matrix:
           packages:
              - g++-8
       env: COMPILER=g++-8 CXXSTD=14
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
+             - g++-9
+      env: COMPILER=g++-9 CXXSTD=14
     - compiler: clang
       addons:
         apt:
@@ -254,4 +270,4 @@ install:
     - if [ "$CXX" = "clang++" ]; then export CXX="$COMPILER -stdlib=libc++"; fi
     - if [ "$CXX" = "g++" ]; then export CXX="$COMPILER"; fi
 
-script: mkdir build && cd build && cmake -DCXXSTD=$CXXSTD .. && make && ./tests
+script: mkdir build && cd build && cmake -DCXXSTD=$CXXSTD -DOPTIONAL_WERROR=ON .. && make && ./tests
