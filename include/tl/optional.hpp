@@ -2047,9 +2047,34 @@ private:
 
 } // namespace tl
 
+namespace tl {
+namespace detail {
+// based off libc++
+// SFINAE guard for std::hash<> specialization
+template <class Key, class Hash>
+using check_hash_requirements = std::integral_constant<
+    bool, std::is_copy_constructible<Hash>::value &&
+              std::is_move_constructible<Hash>::value &&
+              std::is_same<std::size_t, invoke_result_t<Hash, Key>>::value>;
+
+template <class Key, class Hash = std::hash<Key>>
+using has_enabled_hash =
+    std::integral_constant<bool,
+                           check_hash_requirements<Key, Hash>::value &&
+                               std::is_default_constructible<Hash>::value>;
+
+template <class T, class> using enable_hash_impl = T;
+
+template <class T, class Key>
+using enable_hash =
+    enable_hash_impl<T, enable_if_t<has_enabled_hash<Key>::value>>;
+} // namespace detail
+} // namespace tl
+
 namespace std {
-// TODO SFINAE
-template <class T> struct hash<tl::optional<T>> {
+template <class T>
+struct hash<
+    tl::detail::enable_hash<tl::optional<T>, tl::detail::remove_const_t<T>>> {
   ::std::size_t operator()(const tl::optional<T> &o) const {
     if (!o.has_value())
       return 0;
