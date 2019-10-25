@@ -1,11 +1,5 @@
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include <tl/optional.hpp>
-
-#define TOKENPASTE(x, y) x##y
-#define TOKENPASTE2(x, y) TOKENPASTE(x, y)
-#define STATIC_REQUIRE(e)                                                      \
-  constexpr bool TOKENPASTE2(rqure, __LINE__) = e;                             \
-  REQUIRE(e);
 
 TEST_CASE("Constexpr", "[constexpr]") {
 #if !defined(TL_OPTIONAL_MSVC2015) && defined(TL_OPTIONAL_CXX14)

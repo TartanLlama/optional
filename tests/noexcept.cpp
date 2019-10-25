@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include <tl/optional.hpp>
 
 TEST_CASE("Noexcept", "[noexcept]") {
@@ -48,7 +48,7 @@ TEST_CASE("Noexcept", "[noexcept]") {
 
   SECTION("constructors") {
       //TODO see why this fails
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
+#if !defined(_MSC_VER) || _MSC_VER > 1900
     REQUIRE(noexcept(tl::optional<int>{}));
     REQUIRE(noexcept(tl::optional<int>{tl::nullopt}));
 

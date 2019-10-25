@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include <tl/optional.hpp>
 
 // Old versions of GCC don't have the correct trait names. Could fix them up if needs be.
