@@ -141,7 +141,7 @@ matrix:
     - { <<: *clang-7, env: COMPILER=clang++-7 CXXSTD=14 }
     - { <<: *clang-8, env: COMPILER=clang++-8 CXXSTD=14 }
     - { <<: *clang-9, env: COMPILER=clang++-9 CXXSTD=14 }
-    - { <<: *clang-5, env: COMPILER=clang++-5.0 CXXSTD=17 }
+    - { <<: *clang-5, env: COMPILER=clang++-7 CXXSTD=17 }
     - { <<: *clang-8, env: COMPILER=clang++-8 CXXSTD=17 }
     - { <<: *clang-9, env: COMPILER=clang++-9 CXXSTD=17 }
 
