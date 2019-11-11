@@ -41,7 +41,7 @@ target_include_directories(optional
     $<INSTALL_INTERFACE:include>)
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-  add_executable(tl::optional ALIAS optional)
+  add_library(tl::optional ALIAS optional)
 endif()
 
 configure_package_config_file(
