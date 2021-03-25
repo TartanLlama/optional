@@ -110,12 +110,6 @@ Tested on:
   * MSVC 2015
   * MSVC 2017
 
-### Dependencies
-
-Requires [Standardese](https://github.com/foonathan/standardese) for generating documentation.
-
-Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bundled in the test directory.
-
 ### Standards Proposal
 
 This library also serves as an implementation of WG21 standards paper [P0798R0: Monadic operations for std::optional](https://wg21.tartanllama.xyz/monadic-optional). This paper proposes adding `map`, `and_then`, and `or_else` to `std::optional`.
