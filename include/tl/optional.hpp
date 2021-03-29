@@ -448,21 +448,30 @@ struct optional_copy_base : optional_operations_base<T> {
 
 // This specialization is for when T is not trivially copy constructible
 template <class T>
-struct optional_copy_base<T, false> : optional_operations_base<T> {
-  using optional_operations_base<T>::optional_operations_base;
+struct optional_copy_base<T, false> : optional_operations_base<T>
+{
+    using optional_operations_base<T>::optional_operations_base;
 
-  optional_copy_base() = default;
-  optional_copy_base(const optional_copy_base &rhs) {
-    if (rhs.has_value()) {
-      this->construct(rhs.get());
-    } else {
-      this->m_has_value = false;
+    optional_copy_base() = default;
+
+    optional_copy_base(const optional_copy_base &rhs)
+            : optional_copy_base()
+    {
+        if (rhs.has_value())
+        {
+            this->construct(rhs.get());
+        }
+        else
+        {
+            this->m_has_value = false;
+        }
     }
-  }
 
-  optional_copy_base(optional_copy_base &&rhs) = default;
-  optional_copy_base &operator=(const optional_copy_base &rhs) = default;
-  optional_copy_base &operator=(optional_copy_base &&rhs) = default;
+    optional_copy_base(optional_copy_base &&rhs) = default;
+
+    optional_copy_base &operator=(const optional_copy_base &rhs) = default;
+
+    optional_copy_base &operator=(optional_copy_base &&rhs) = default;
 };
 
 // This class manages conditionally having a trivial move constructor
