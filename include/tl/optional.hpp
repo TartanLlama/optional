@@ -27,8 +27,12 @@
 #include <type_traits>
 #include <utility>
 
-#if (defined(_MSC_VER) && _MSC_VER == 1900)
+#if defined(_MSC_VER)
+#pragma warning( push )
+#pragma warning( disable: 4582 4583 )
+#if (_MSC_VER == 1900)
 #define TL_OPTIONAL_MSVC2015
+#endif
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
@@ -2059,5 +2063,9 @@ template <class T> struct hash<tl::optional<T>> {
   }
 };
 } // namespace std
+
+#if defined(_MSC_VER)
+#pragma warning( pop )
+#endif
 
 #endif
