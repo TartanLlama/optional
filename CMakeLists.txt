@@ -11,14 +11,15 @@ include(GNUInstallDirs)
 include(FetchContent)
 include(CTest)
 
-find_program(DPKG_BUILDPACKAGE_FOUND dpkg-buildpackage)
-find_program(RPMBUILD_FOUND rpmbuild)
-
 if (NOT DEFINED CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
 option(OPTIONAL_BUILD_PACKAGE "Build packages" ON)
+if (OPTIONAL_BUILD_PACKAGE)
+    find_program(DPKG_BUILDPACKAGE_FOUND dpkg-buildpackage)
+    find_program(RPMBUILD_FOUND rpmbuild)
+endif()
 
 cmake_dependent_option(OPTIONAL_BUILD_TESTS
   "Enable tl::optional tests" ON
