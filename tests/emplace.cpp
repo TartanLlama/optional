@@ -11,3 +11,14 @@ TEST_CASE("Emplace", "[emplace]") {
     REQUIRE(i->second.first == 3);
     REQUIRE(i->second.second == 4);    
 }
+
+struct A {
+    A() {
+        throw std::exception();
+    }
+};
+
+TEST_CASE("Emplace with exception thrown", "[emplace]") {
+    tl::optional<A> a;
+    REQUIRE_THROWS(a.emplace());
+}
