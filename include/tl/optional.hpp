@@ -409,7 +409,7 @@ template <class T> struct optional_operations_base : optional_storage_base<T> {
     this->m_has_value = false;
   }
 
-  template <class... Args> void construct(Args &&... args) noexcept {
+  template <class... Args> void construct(Args &&... args) {
     new (std::addressof(this->m_value)) T(std::forward<Args>(args)...);
     this->m_has_value = true;
   }
