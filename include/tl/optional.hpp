@@ -1182,7 +1182,7 @@ public:
       }
     }
 
-    if (rhs.has_value()) {
+    else if (rhs.has_value()) {
       this->construct(*rhs);
     }
 
@@ -1204,7 +1204,7 @@ public:
       }
     }
 
-    if (rhs.has_value()) {
+    else if (rhs.has_value()) {
       this->construct(std::move(*rhs));
     }
 
