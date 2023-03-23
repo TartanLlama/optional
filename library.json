@@ -1,0 +1,13 @@
+{
+    "name": "optional",
+    "version": "1.0.0",
+    "build": {
+        "includeDir": "include",
+        "srcFilter": [
+            "+<*>",
+            "-<.git>",
+            "-<cmake/>",
+            "-<tests/*>"
+        ]
+    }
+}
