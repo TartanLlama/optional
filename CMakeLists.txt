@@ -74,42 +74,18 @@ if (OPTIONAL_BUILD_TESTS)
   set(CATCH_BUILD_TESTING OFF)
   set(CATCH_INSTALL_DOCS OFF)
   FetchContent_Declare(Catch2 URL
-    https://github.com/catchorg/Catch2/archive/v2.9.2.zip) 
+    https://github.com/catchorg/Catch2/archive/v3.6.0.zip) 
   FetchContent_MakeAvailable(Catch2)
-
-  file(GENERATE OUTPUT catch.main.cpp
-    CONTENT [[
-      #define CATCH_CONFIG_MAIN
-      #include <catch2/catch.hpp>
-  ]])
-  set_property(SOURCE ${PROJECT_BINARY_DIR}/catch.main.cpp
-    PROPERTY
-      GENERATED ON)
-  add_library(${PROJECT_NAME}-catch-main OBJECT)
-  target_sources(${PROJECT_NAME}-catch-main PRIVATE
-    ${PROJECT_BINARY_DIR}/catch.main.cpp)
-  target_compile_options(${PROJECT_NAME}-catch-main
-    PUBLIC
-      $<$<AND:$<CXX_COMPILER_ID:Clang>,$<BOOL:"$ENV{TRAVIS}">>:-stdlib=libc++>
-      $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra>)
-  target_link_options(${PROJECT_NAME}-catch-main
-    PUBLIC
-      $<$<AND:$<CXX_COMPILER_ID:Clang>,$<BOOL:"$ENV{TRAVIS}">>:-stdlib=libc++>)
-  target_link_libraries(${PROJECT_NAME}-catch-main
-    PUBLIC
-      Catch2::Catch2
-      optional)
 
   file(GLOB test-sources CONFIGURE_DEPENDS tests/*.cpp)
   foreach (source IN LISTS test-sources)
     get_filename_component(name "${source}" NAME_WE)
     set(test "${PROJECT_NAME}-test-${name}")
     add_executable(${test}
-      "${source}"
-      $<TARGET_OBJECTS:${PROJECT_NAME}-catch-main>)
+      "${source}")
     target_link_libraries(${test}
       PRIVATE
-        ${PROJECT_NAME}-catch-main)
+        Catch2::Catch2WithMain optional)
     add_test(NAME ${PROJECT_NAME}::test::${name} COMMAND ${test})
   endforeach()
 endif()
