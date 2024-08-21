@@ -1256,6 +1256,24 @@ public:
     swap(this->m_has_value, rhs.m_has_value);
   }
 
+  using iterator = T *;
+  using const_iterator = const T *;
+
+  /// Returns an iterator to the stored value, otherwise returns a past-the-end
+  /// iterator
+  constexpr iterator begin() noexcept {
+    return std::addressof(this->m_value) + !has_value();
+  }
+  constexpr iterator end() noexcept {
+    return std::addressof(this->m_value) + 1;
+  }
+  constexpr const_iterator begin() const noexcept {
+    return std::addressof(this->m_value) + !has_value();
+  }
+  constexpr const_iterator end() const noexcept {
+    return std::addressof(this->m_value) + 1;
+  }
+
   /// Returns a pointer to the stored value
   constexpr const T *operator->() const {
     return std::addressof(this->m_value);
@@ -1991,6 +2009,18 @@ public:
   }
 
   void swap(optional &rhs) noexcept { std::swap(m_value, rhs.m_value); }
+
+  using iterator = T *;
+  using const_iterator = const T *;
+
+  /// Returns an iterator to the stored value, otherwise returns a past-the-end
+  /// iterator
+  constexpr iterator begin() noexcept { return m_value + !has_value(); }
+  constexpr iterator end() noexcept { return m_value + 1; }
+  constexpr const_iterator begin() const noexcept {
+    return m_value + !has_value();
+  }
+  constexpr const_iterator end() const noexcept { return m_value + 1; }
 
   /// Returns a pointer to the stored value
   constexpr const T *operator->() const noexcept { return m_value; }
