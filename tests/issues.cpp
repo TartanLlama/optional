@@ -43,3 +43,17 @@ TEST_CASE("issue 33") {
     REQUIRE(*a == 42);
     REQUIRE(a.has_value());
 }
+
+TEST_CASE("issue 66") {
+    int i = 42;
+    int j = 43;
+    tl::optional<std::reference_wrapper<int>> a = std::ref(i);
+    REQUIRE(&a.value().get() == &i);
+    a = std::ref(j);
+    REQUIRE(&a.value().get() == &j);
+
+    tl::optional<int&> b = std::ref(i);
+    REQUIRE(&b.value() == &i);
+    b = std::ref(j);
+    REQUIRE(&b.value() == &j);
+}

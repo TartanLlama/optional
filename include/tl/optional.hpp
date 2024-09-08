@@ -1936,11 +1936,10 @@ public:
   TL_OPTIONAL_11_CONSTEXPR optional(optional &&rhs) = default;
 
   /// Constructs the stored value with `u`.
-  template <class U = T,
-            detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value>
+  template <class U,
+            detail::enable_if_t<std::is_convertible<U, T&>::value>
                 * = nullptr>
-  constexpr optional(U &&u)  noexcept : m_value(std::addressof(u)) {
-    static_assert(std::is_lvalue_reference<U>::value, "U must be an lvalue");
+  constexpr optional(U &&u)  noexcept : m_value(std::addressof(static_cast<T&>(u))) {
   }
 
   template <class U>
@@ -1964,12 +1963,11 @@ public:
   optional &operator=(const optional &rhs) = default;
 
   /// Rebinds this optional to `u`.
-  template <class U = T,
-            detail::enable_if_t<!detail::is_optional<detail::decay_t<U>>::value>
+  template <class U,
+            detail::enable_if_t<std::is_convertible<U, T&>::value>
                 * = nullptr>
   optional &operator=(U &&u) {
-    static_assert(std::is_lvalue_reference<U>::value, "U must be an lvalue");
-    m_value = std::addressof(u);
+    m_value = std::addressof(static_cast<T&>(u));
     return *this;
   }
 
