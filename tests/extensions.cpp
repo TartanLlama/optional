@@ -1,9 +1,62 @@
 #include <catch2/catch.hpp>
 #include <tl/optional.hpp>
+#include <memory>
 #include <string>
 
 constexpr int get_int(int) { return 42; }
 TL_OPTIONAL_11_CONSTEXPR tl::optional<int> get_opt_int(int) { return 42; }
+
+template <class Optional>
+void test_conjunction_forwarding(const Optional &engaged,
+                                 const Optional &empty) {
+  std::unique_ptr<int> value(new int(13));
+  const auto original = value.get();
+  auto result = engaged.conjunction(std::move(value));
+  STATIC_REQUIRE((std::is_same<decltype(result),
+                               tl::optional<std::unique_ptr<int>>>::value));
+  REQUIRE(result);
+  REQUIRE(result->get() == original);
+  REQUIRE(**result == 13);
+  REQUIRE(!value);
+  REQUIRE(engaged);
+
+  std::unique_ptr<int> retained(new int(7));
+  const auto retained_original = retained.get();
+  auto absent = empty.conjunction(std::move(retained));
+  REQUIRE(!absent);
+  REQUIRE(retained.get() == retained_original);
+  REQUIRE(*retained == 7);
+  REQUIRE(!empty);
+
+  std::string text = "hello";
+  auto copied = engaged.conjunction(text);
+  STATIC_REQUIRE(
+      (std::is_same<decltype(copied), tl::optional<std::string>>::value));
+  REQUIRE(*copied == text);
+  *copied = "changed";
+  REQUIRE(text == "hello");
+  REQUIRE(!empty.conjunction(text));
+  REQUIRE(text == "hello");
+
+  const std::string const_text = "const";
+  auto const_copied = engaged.conjunction(const_text);
+  STATIC_REQUIRE(
+      (std::is_same<decltype(const_copied), tl::optional<std::string>>::value));
+  REQUIRE(*const_copied == const_text);
+  REQUIRE(!empty.conjunction(const_text));
+}
+
+TEST_CASE("conjunction forwards its argument", "[monadic]") {
+  SECTION("value optional") {
+    test_conjunction_forwarding(tl::optional<int>{42}, tl::optional<int>{});
+  }
+  SECTION("reference optional") {
+    int value = 42;
+    test_conjunction_forwarding(tl::optional<int &>{value},
+                                tl::optional<int &>{});
+    REQUIRE(value == 42);
+  }
+}
 
 // What is Clang Format up to?!
 TEST_CASE("Monadic operations", "[monadic]") {
