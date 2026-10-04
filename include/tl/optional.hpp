@@ -994,7 +994,7 @@ public:
   template <class U>
   constexpr optional<typename std::decay<U>::type> conjunction(U &&u) const {
     using result = optional<detail::decay_t<U>>;
-    return has_value() ? result{u} : result{nullopt};
+    return has_value() ? result{std::forward<U>(u)} : result{nullopt};
   }
 
   /// Returns `rhs` if `*this` is empty, otherwise the current value.
@@ -1869,7 +1869,7 @@ public:
   template <class U>
   constexpr optional<typename std::decay<U>::type> conjunction(U &&u) const {
     using result = optional<detail::decay_t<U>>;
-    return has_value() ? result{u} : result{nullopt};
+    return has_value() ? result{std::forward<U>(u)} : result{nullopt};
   }
 
   /// Returns `rhs` if `*this` is empty, otherwise the current value.
