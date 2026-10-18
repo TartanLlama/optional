@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(tl-optional 
   HOMEPAGE_URL https://tl.tartanllama.xyz
   DESCRIPTION "C++11/14/17 std::optional with functional-style extensions and reference support"
-  VERSION 1.0.0
+  VERSION 1.1.0
   LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
