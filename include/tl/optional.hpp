@@ -1336,35 +1336,41 @@ public:
 
 /// Compares two optional objects
 template <class T, class U>
-inline constexpr bool operator==(const optional<T> &lhs,
-                                 const optional<U> &rhs) {
+inline constexpr auto operator==(const optional<T> &lhs,
+                                 const optional<U> &rhs)
+    -> decltype(bool(*lhs == *rhs)) {
   return lhs.has_value() == rhs.has_value() &&
          (!lhs.has_value() || *lhs == *rhs);
 }
 template <class T, class U>
-inline constexpr bool operator!=(const optional<T> &lhs,
-                                 const optional<U> &rhs) {
+inline constexpr auto operator!=(const optional<T> &lhs,
+                                 const optional<U> &rhs)
+    -> decltype(bool(*lhs != *rhs)) {
   return lhs.has_value() != rhs.has_value() ||
          (lhs.has_value() && *lhs != *rhs);
 }
 template <class T, class U>
-inline constexpr bool operator<(const optional<T> &lhs,
-                                const optional<U> &rhs) {
+inline constexpr auto operator<(const optional<T> &lhs,
+                                const optional<U> &rhs)
+    -> decltype(bool(*lhs < *rhs)) {
   return rhs.has_value() && (!lhs.has_value() || *lhs < *rhs);
 }
 template <class T, class U>
-inline constexpr bool operator>(const optional<T> &lhs,
-                                const optional<U> &rhs) {
+inline constexpr auto operator>(const optional<T> &lhs,
+                                const optional<U> &rhs)
+    -> decltype(bool(*lhs > *rhs)) {
   return lhs.has_value() && (!rhs.has_value() || *lhs > *rhs);
 }
 template <class T, class U>
-inline constexpr bool operator<=(const optional<T> &lhs,
-                                 const optional<U> &rhs) {
+inline constexpr auto operator<=(const optional<T> &lhs,
+                                 const optional<U> &rhs)
+    -> decltype(bool(*lhs <= *rhs)) {
   return !lhs.has_value() || (rhs.has_value() && *lhs <= *rhs);
 }
 template <class T, class U>
-inline constexpr bool operator>=(const optional<T> &lhs,
-                                 const optional<U> &rhs) {
+inline constexpr auto operator>=(const optional<T> &lhs,
+                                 const optional<U> &rhs)
+    -> decltype(bool(*lhs >= *rhs)) {
   return !rhs.has_value() || (lhs.has_value() && *lhs >= *rhs);
 }
 
@@ -1420,51 +1426,63 @@ inline constexpr bool operator>=(nullopt_t, const optional<T> &rhs) noexcept {
 
 /// Compares the optional with a value.
 template <class T, class U>
-inline constexpr bool operator==(const optional<T> &lhs, const U &rhs) {
+inline constexpr auto operator==(const optional<T> &lhs, const U &rhs)
+    -> decltype(bool(*lhs == rhs)) {
   return lhs.has_value() ? *lhs == rhs : false;
 }
 template <class T, class U>
-inline constexpr bool operator==(const U &lhs, const optional<T> &rhs) {
+inline constexpr auto operator==(const U &lhs, const optional<T> &rhs)
+    -> decltype(bool(lhs == *rhs)) {
   return rhs.has_value() ? lhs == *rhs : false;
 }
 template <class T, class U>
-inline constexpr bool operator!=(const optional<T> &lhs, const U &rhs) {
+inline constexpr auto operator!=(const optional<T> &lhs, const U &rhs)
+    -> decltype(bool(*lhs != rhs)) {
   return lhs.has_value() ? *lhs != rhs : true;
 }
 template <class T, class U>
-inline constexpr bool operator!=(const U &lhs, const optional<T> &rhs) {
+inline constexpr auto operator!=(const U &lhs, const optional<T> &rhs)
+    -> decltype(bool(lhs != *rhs)) {
   return rhs.has_value() ? lhs != *rhs : true;
 }
 template <class T, class U>
-inline constexpr bool operator<(const optional<T> &lhs, const U &rhs) {
+inline constexpr auto operator<(const optional<T> &lhs, const U &rhs)
+    -> decltype(bool(*lhs < rhs)) {
   return lhs.has_value() ? *lhs < rhs : true;
 }
 template <class T, class U>
-inline constexpr bool operator<(const U &lhs, const optional<T> &rhs) {
+inline constexpr auto operator<(const U &lhs, const optional<T> &rhs)
+    -> decltype(bool(lhs < *rhs)) {
   return rhs.has_value() ? lhs < *rhs : false;
 }
 template <class T, class U>
-inline constexpr bool operator<=(const optional<T> &lhs, const U &rhs) {
+inline constexpr auto operator<=(const optional<T> &lhs, const U &rhs)
+    -> decltype(bool(*lhs <= rhs)) {
   return lhs.has_value() ? *lhs <= rhs : true;
 }
 template <class T, class U>
-inline constexpr bool operator<=(const U &lhs, const optional<T> &rhs) {
+inline constexpr auto operator<=(const U &lhs, const optional<T> &rhs)
+    -> decltype(bool(lhs <= *rhs)) {
   return rhs.has_value() ? lhs <= *rhs : false;
 }
 template <class T, class U>
-inline constexpr bool operator>(const optional<T> &lhs, const U &rhs) {
+inline constexpr auto operator>(const optional<T> &lhs, const U &rhs)
+    -> decltype(bool(*lhs > rhs)) {
   return lhs.has_value() ? *lhs > rhs : false;
 }
 template <class T, class U>
-inline constexpr bool operator>(const U &lhs, const optional<T> &rhs) {
+inline constexpr auto operator>(const U &lhs, const optional<T> &rhs)
+    -> decltype(bool(lhs > *rhs)) {
   return rhs.has_value() ? lhs > *rhs : true;
 }
 template <class T, class U>
-inline constexpr bool operator>=(const optional<T> &lhs, const U &rhs) {
+inline constexpr auto operator>=(const optional<T> &lhs, const U &rhs)
+    -> decltype(bool(*lhs >= rhs)) {
   return lhs.has_value() ? *lhs >= rhs : false;
 }
 template <class T, class U>
-inline constexpr bool operator>=(const U &lhs, const optional<T> &rhs) {
+inline constexpr auto operator>=(const U &lhs, const optional<T> &rhs)
+    -> decltype(bool(lhs >= *rhs)) {
   return rhs.has_value() ? lhs >= *rhs : true;
 }
 
