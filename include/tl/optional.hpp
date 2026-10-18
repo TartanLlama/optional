@@ -354,6 +354,10 @@ using enable_assign_from_other = detail::enable_if_t<
 // The storage base manages the actual storage, and correctly propagates
 // trivial destruction from T. This case is for when T is not trivially
 // destructible.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4582 4583)
+#endif
 template <class T, bool = ::std::is_trivially_destructible<T>::value>
 struct optional_storage_base {
   TL_OPTIONAL_11_CONSTEXPR optional_storage_base() noexcept
@@ -398,6 +402,9 @@ template <class T> struct optional_storage_base<T, true> {
 
   bool m_has_value = false;
 };
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 // This base class provides some handy member functions which can be used in
 // further derived classes
